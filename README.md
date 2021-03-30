@@ -41,6 +41,45 @@ response:
 
 response `User object`
 
+
+### Confirm Phone
+
+#### Get a code
+
+> POST account/confirm/
+
+body:
+```json
+{
+    "phone":"89XXXXXXXXX"
+}
+```
+
+response:
+```json
+{
+    "id": 1
+}
+```
+
+#### Confirm
+
+> GET account/confirm/?id=1&code=<code>
+
+response (`200`):
+```json
+{
+    "message": "Phone number confirmed"
+}
+```
+
+response (`403`):
+```json
+{
+    "message": "Wrong code|id"
+}
+```
+
 ## Visits
 
 ### Get QR (Hash):

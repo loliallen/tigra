@@ -28,6 +28,10 @@ class CustomUserAdmin(UserAdmin):
             'username',
             'password',
         )}),
+        ("Confirmation", { 'fields' : (
+            'code',
+            'confirmed',
+        )}),
         ("Personal Info", { 'fields' : (
             'email',
             'first_name',
