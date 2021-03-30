@@ -8,6 +8,7 @@ import requests
 
 
 from .models import User
+from .controller import sendCode
 # Create your views here.
 
 SMS_AERO_API_KEY = "p56Y8j13AhS5mvN1WUXdtDnNeGF"
@@ -29,17 +30,8 @@ class ConfirmPhone(APIView):
         if user.confirmed:
             return Response({'message': 'Phone number alrady confirmed'})
 
+        sendCode(user.phone, user.code)
 
-        custom_params = {
-            "number":user.phone,
-            "text":"Your one time code is: {}".format(user.code),
-            "sign":"SMS Aero"
-        }
-        requests.get(
-            url = SMS_AERO_URL,
-            params=custom_params,
-            auth=HTTPBasicAuth(SMS_AERO_USERNAME,SMS_AERO_API_KEY)
-        ) #same as Http Basic auth        
         return Response({'id': user.pk})
     
     def get(self, request):

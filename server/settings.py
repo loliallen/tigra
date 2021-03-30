@@ -90,7 +90,7 @@ DJOSER = {
     'serializers': {
         'user': 'account.serializer.CreateUserSerializer',
     },
-    "LOGIN_FIELD": "email"
+    "LOGIN_FIELD": "phone"
 }
 
 AUTH_USER_MODEL = 'account.User'

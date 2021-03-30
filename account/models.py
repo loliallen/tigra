@@ -3,12 +3,12 @@ from django.contrib.auth.models import AbstractUser
 
 from mobile.models import Visit
 
-from string import digits, ascii_letters
+from string import digits, ascii_uppercase
 import random
 # Create your models here.
 
 def createCode():
-    return ''.join([random.choice(digits + ascii_letters) for i in range(6)])
+    return ''.join([random.choice(digits + ascii_uppercase) for i in range(6)])
 
 SEX_CHOICES = (
     ('F', 'female'),
@@ -25,7 +25,7 @@ class User(AbstractUser):
     phone = models.CharField(max_length=12, unique=True)
     email = models.TextField(unique=True)
     username = models.TextField(unique=True)
-    code = models.TextField(default=createCode, blank=True)
+    code = models.CharField(default=createCode, blank=True, max_length=6)
     confirmed = models.BooleanField(default=False, blank=True)
     children = models.ManyToManyField(
         to=Child,
@@ -40,7 +40,7 @@ class User(AbstractUser):
         blank=True
     )
 
-    USERNAME_FIELD = "email"
+    USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = ['username']
 
 class TmpHash(models.Model):

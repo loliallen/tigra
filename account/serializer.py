@@ -16,8 +16,9 @@ class CreateUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create(
             phone=validated_data.get('phone'),
-            password=make_password(validated_data.get('password')),
-            code=code
+            password=make_password(validated_data.get('password'))
         )
         # send verification code
+        sendCode(user.phone, user.code)
+
         return user
