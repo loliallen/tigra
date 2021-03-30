@@ -64,7 +64,7 @@ response:
 
 #### Confirm
 
-> GET account/confirm/?id=1&code=<code>
+> GET account/confirm/?id=1&code=`<code>`
 
 response (`200`):
 ```json
