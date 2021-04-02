@@ -69,7 +69,7 @@ class TmpHash(models.Model):
 class Invintation(models.Model):
     value = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
     creator = models.ForeignKey(
-        User, 
+        User,
         on_delete=models.CASCADE,
         blank=True,
         default=None,

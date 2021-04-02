@@ -2,10 +2,12 @@
 # from datetime import timedelta
 # from uuid import uuid4
 
+import os
 import firebase_admin
 from firebase_admin import credentials, messaging
 
-cred = credentials.Certificate("/home/loliallen/Documents/Projects/tigra/server/creds.json")
+cred_abs_path = os.environ.get('FIREBASE_CRED')
+cred = credentials.Certificate(cred_abs_path)
 app = firebase_admin.initialize_app(cred)
 
 

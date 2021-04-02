@@ -24,7 +24,7 @@ class ConfirmPhone(APIView):
         data = request.data
 
         phone = data.get('phone')
-        
+
         try:
             user = User.objects.get(phone=phone)
         except:
@@ -36,7 +36,7 @@ class ConfirmPhone(APIView):
         sendCode(user.phone, user.code)
 
         return Response({'id': user.pk})
-    
+
     def get(self, request):
         query = request.query_params
         id = query.get('id')
@@ -53,7 +53,7 @@ class ConfirmPhone(APIView):
             user.save()
             return Response({'message': 'Phone number confirmed'})
         return Response({'message': 'Wrong code'}, status=403)
-    
+
 
 class InvitationsViewSet(ViewSet):
     permission_classes=[IsAuthenticated]
@@ -65,7 +65,7 @@ class InvitationsViewSet(ViewSet):
         invintation = InvintationSerializer(user.my_invintations, many=True)
 
         return Response(invintation.data)
-    
+
     def create(self, request):
         userId = request.user.id
 
@@ -74,14 +74,24 @@ class InvitationsViewSet(ViewSet):
         invintation = InvintationSerializer(data={ "creator": user })
         if not invintation.is_valid():
             return Response(invintation.errors)
-        
+
         invintation.save()
         user.my_intintations.add(invintation)
         user.save()
 
-        
+
         return Response(invintation.data)
 
 class UserModelView(ModelViewSet):
+    permission_classes=[IsAuthenticated]
     serializer_class = CreateUserSerializer
     queryset = User.objects.all()
+
+class UserInfo(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self, request):
+        user = User.objects.get(pk=request.user.id)
+
+        data = CreateUserSerializer(user)
+
+        return Response(data.data)
