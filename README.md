@@ -122,6 +122,58 @@ response:
     "id": 9,
     "date": "2021-03-30T05:11:03.071080Z",
     "duration": 3600,
-    "is_free": false|true
+    "end": "2021-03-30T06:11:03.071080Z",
+    "is_free": false|true,
+    "is_active": false|true,
+    "staff": 1
 }
+```
+
+### Get All last visits
+
+> GET mobile/visits/add
+
+response:
+```json
+[
+    {
+        "id": 8,
+        "visiter": [
+            {
+                "id": 1,
+                "password": "pbkdf2_sha256$216000$JMz2HXQylK2Y$6cZgFoS3GSEU+EP3Sa56QmnpKtHvE0J7Hk7TgoMelEI=",
+                "last_login": "2021-04-02T16:41:24.153292+03:00",
+                "is_superuser": true,
+                "first_name": "lapp",
+                "last_name": "lapp",
+                "is_staff": true,
+                "is_active": true,
+                "date_joined": "2021-04-01T16:52:35+03:00",
+                "phone": "lapp",
+                "email": "lapp@lapp.com",
+                "username": "lapp",
+                "phone_code": "123456",
+                "phone_confirmed": true,
+                "device_token": "",
+                "used_invintation": 1,
+                "groups": [],
+                "user_permissions": [],
+                "my_invintations": [
+                    1
+                ],
+                "children": [],
+                "visits": [
+                    7,
+                    8
+                ]
+            }
+        ],
+        "date": "2021-04-02T19:12:36.615214+03:00",
+        "duration": 3600,
+        "end": "2021-04-02T20:12:36.615139+03:00",
+        "is_free": false,
+        "is_active": true,
+        "staff": 1
+    }
+]
 ```
