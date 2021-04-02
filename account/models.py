@@ -21,12 +21,27 @@ class Child(models.Model):
     sex = models.TextField(choices=SEX_CHOICES)
 
 
+
 class User(AbstractUser):
     phone = models.CharField(max_length=12, unique=True)
     email = models.TextField(unique=True)
     username = models.TextField(unique=True)
-    code = models.CharField(default=createCode, blank=True, max_length=6)
-    confirmed = models.BooleanField(default=False, blank=True)
+    phone_code = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
+    phone_confirmed = models.BooleanField(default=False, blank=True)
+    device_token = models.TextField(default="")
+    used_invintation = models.ForeignKey(
+        to='account.Invintation',
+        on_delete=models.CASCADE,
+        blank=True,
+        default=None,
+        null=True
+    )
+    my_invintations = models.ManyToManyField(
+        to='account.Invintation',
+        related_name="creator_user",
+        default=[],
+        blank=True
+    )
     children = models.ManyToManyField(
         to=Child,
         related_name="parent",
@@ -41,8 +56,24 @@ class User(AbstractUser):
     )
 
     USERNAME_FIELD = "phone"
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = (
+        "first_name",
+        "last_name",
+        "username",
+    )
 
 class TmpHash(models.Model):
     hash = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class Invintation(models.Model):
+    value = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
+    creator = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,
+        blank=True,
+        default=None,
+        null=True
+    )
+    used = models.BooleanField(blank=True, default=False)
+    visited = models.BooleanField(blank=True, default=False)

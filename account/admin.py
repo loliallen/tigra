@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User, Child
+from .models import User, Child, Invintation
 # Register your models here.
 
 
@@ -29,8 +29,8 @@ class CustomUserAdmin(UserAdmin):
             'password',
         )}),
         ("Confirmation", { 'fields' : (
-            'code',
-            'confirmed',
+            'phone_code',
+            'phone_confirmed',
         )}),
         ("Personal Info", { 'fields' : (
             'email',
@@ -50,8 +50,11 @@ class CustomUserAdmin(UserAdmin):
         )}),
         ("Additional Fields", {'fields': (
             'visits',
+            'my_invintations',
+            'used_invintation',
         )}),
     )
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Child)
+admin.site.register(Invintation)

@@ -7,12 +7,16 @@ from account.models import User, TmpHash
 from account.serializer import CreateUserSerializer
 from .serializer import VisitSerializer
 from .models import Visit, now
+import server.firebase as fcm
 
 import qrcode
 
 import hashlib
 
 # Create your views here.
+
+TITLE = "Some notification title"
+MSG = "Some msg body lol kek lorem impus"
 
 class VisitListView(APIView):
     permission_classes=[IsAuthenticated]
@@ -43,8 +47,23 @@ class VisitListView(APIView):
         except ObjectDoesNotExist:
             return Response({'message', 'User Does Not Exist'}, status=403)
 
+        
+        if user.used_invintation != None and len(user.visits.all()) == 0:
+            invite = user.used_invintation
+            creator = user.used_invintation.creator
+            vis = Visit(
+                is_free=True,
+                date=None
+            )
+            vis.save()
+            invite.visited = True
+            invite.save()
+            creator.visits.add(vis)
+            # send notification
+            fcm.sendPush(title=TITLE, msg=MSG, registration_token=[creator.device_token])
+
+
         vis = user.visits.last()
-        print(vis)
         vis_len = len(user.visits.all())
 
         if vis != None and vis.duration == None and vis.is_free:
@@ -103,3 +122,12 @@ class VisitsView(APIView):
         # img.save(response, "PNG")
 
         return Response({'hash': hash_str})
+
+
+class NotitficationView(APIView):
+    def post(self, request):
+        data = request.data
+
+        fcm.sendPush(data.get('title'), data.get('msg'), data.get('tokens'))
+
+        return Response({'message': 'Cloud Message sent...'})
