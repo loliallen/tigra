@@ -11,7 +11,11 @@ body:
 {
     "email": "email",
     "password": "password",
-    ...
+    "username": "",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "phone"
 }
 ```
 
@@ -23,7 +27,7 @@ body:
 body:
 ```json
 {
-    "email": "email",
+    "phone": "phone",
     "password": "password",
 }
 ```
@@ -40,7 +44,64 @@ response:
 > POST/GET? account/about/me
 
 response `User object`
-
+```json
+{
+    "id": 1,
+    "visits": [
+        {
+            "id": 7,
+            "date": "2021-04-02T19:11:09.554183+03:00",
+            "duration": 3600,
+            "end": "2021-04-02T20:11:09.554199+03:00",
+            "is_free": true,
+            "is_active": false,
+            "staff": 1
+        },
+        {
+            "id": 8,
+            "date": "2021-04-02T19:12:36.615214+03:00",
+            "duration": 3600,
+            "end": "2021-04-02T20:12:36.615139+03:00",
+            "is_free": false,
+            "is_active": true,
+            "staff": 1
+        }
+    ],
+    "children": [],
+    "used_invintation": {
+        "id": 1,
+        "value": "9RA7YM",
+        "used": false,
+        "visited": true,
+        "creator": 1
+    },
+    "my_invintations": [
+        {
+            "id": 1,
+            "value": "9RA7YM",
+            "used": false,
+            "visited": true,
+            "creator": 1
+        }
+    ],
+    "password": "pbkdf2_sha256$216000$BosoQ250chl0$h8/cvLJjpNlhWY0nLsu9DRPN8oYw6dDqALI9t5/kd+4=",
+    "last_login": "2021-04-03T16:03:50.481545+03:00",
+    "is_superuser": true,
+    "first_name": "lapp",
+    "last_name": "lapp",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2021-04-01T16:52:35+03:00",
+    "phone": "lapp",
+    "email": "lapp@lapp.com",
+    "username": "some2",
+    "phone_code": "123456",
+    "phone_confirmed": true,
+    "device_token": "",
+    "groups": [],
+    "user_permissions": []
+}
+```
 
 ### Confirm Phone
 
@@ -264,4 +325,41 @@ response:
         "staff": 1
     }
 ]
+```
+
+## Invitatins
+
+### Get my invites
+> GET account/invite/
+
+response:
+```json
+[
+    {
+        "id": 1,
+        "value": "9RA7YM",
+        "used": false,
+        "visited": true,
+        "creator": 1
+    }
+]
+```
+
+### Create invite
+> POST account/invite/
+
+body:
+```json
+
+```
+
+response:
+```json
+{
+    "id": 1,
+    "value": "9RA7YM",
+    "used": false,
+    "visited": true,
+    "creator": 1
+}
 ```
