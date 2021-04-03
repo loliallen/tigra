@@ -39,6 +39,17 @@ response:
 }
 ```
 
+### Set device token
+> POST account/device/
+
+body:
+```json
+{
+  "token": "fcm token"
+}
+```
+
+
 ### Me
 
 > POST/GET? account/about/me

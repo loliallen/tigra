@@ -192,3 +192,17 @@ class UserInfo(APIView):
         data = CreateUserSerializer(user)
 
         return Response(data.data)
+
+class DeviceTokenView(APIView):
+    permission_classes=[IsAuthenticated]
+    def post(self, request):
+        data = request.data
+
+        userID = request.user.id
+        try:
+            user = User.objects.get(pk=userID)
+        except:
+            return Response({'message': 'User not found, please provide token'}, status=403)
+        user.device_token = data['token']
+
+        return Response({'message': "Token updated"})
