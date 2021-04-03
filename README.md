@@ -37,7 +37,7 @@ response:
 
 ### Me
 
-> POST/GET? account/users/me
+> POST/GET? account/about/me
 
 response `User object`
 
@@ -77,6 +77,94 @@ response (`403`):
 ```json
 {
     "message": "Wrong code|id"
+}
+```
+
+### Update
+
+> PUT account/manage/
+
+body:
+```json
+{
+    "username": "",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "children": [
+      {
+        "id": 1,
+        "updates": {
+          "sex": "M",
+          "age": 10
+        }
+      },
+      {
+        "add": {
+          "sex": "M",
+          "age": 10,
+          "name": "name"
+        }
+      },
+      {
+        "id": 2,
+        "delete": true,
+      }
+    ]
+}
+```
+
+
+## Reset password
+### Create application to reset password
+
+> POST account/reset_password/
+
+body:
+```json
+  "phone": "89XXXXXXXXX"
+```
+
+response:
+```json
+{
+  "message": "The code was sent to your phone",
+  "code": "user_code"
+}
+```
+> note: save `code(user_code)`
+
+the user phone will receive a `code`
+
+### Check code(sms)
+
+> GET account/reset_password/?code=`<code>`
+>> Use code from sms, not from response
+
+response(ok):
+```json
+{
+  "message": "Code is valid"
+}
+```
+
+response(not ok)400:
+```json
+{
+  "message": "Code is invalid"
+}
+```
+
+### Set a new password
+
+> PUT account/reset_password/
+
+body:
+```json
+{
+  "code": "code from sms",
+  "user_code": "code from response",
+  "password": "a new password"
 }
 ```
 

@@ -66,6 +66,12 @@ class TmpHash(models.Model):
     hash = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+class ApplicationToReset(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    field = models.CharField(max_length=60)
+    code = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
+    user_code = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
+
 class Invintation(models.Model):
     value = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
     creator = models.ForeignKey(
