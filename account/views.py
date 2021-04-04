@@ -7,18 +7,10 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from django.contrib.auth.hashers import make_password, check_password
 
-from requests.auth import HTTPBasicAuth
-import requests
-
-
 from .models import User, Invintation, Child, ApplicationToReset
 from .controller import sendCode
 from .serializer import InvintationSerializer, CreateUserSerializer
 # Create your views here.
-
-SMS_AERO_API_KEY = "p56Y8j13AhS5mvN1WUXdtDnNeGF"
-SMS_AERO_USERNAME = "savrulloevsunrise@gmail.com"
-SMS_AERO_URL = "https://email:api_key@gate.smsaero.ru/v2/sms/send"
 
 
 UPDATE_FIELDS = ['username', 'first_name', 'last_name', 'email']
