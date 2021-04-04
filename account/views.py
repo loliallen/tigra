@@ -37,7 +37,7 @@ class ConfirmPhone(APIView):
         if user.phone_confirmed:
             return Response({'message': 'Phone number alrady confirmed'})
 
-        sendCode(user.phone, user.code)
+        sendCode(user.phone, user.phone_code)
 
         return Response({'id': user.pk})
 
@@ -52,7 +52,7 @@ class ConfirmPhone(APIView):
             return Response({'message': 'Wrong id'}, status=403)
 
 
-        if code == user.code:
+        if code == user.phone_code:
             user.phone_confirmed = True
             user.save()
             return Response({'message': 'Phone number confirmed'})
@@ -175,7 +175,7 @@ class ResetPasswordView(APIView):
     def put(self, request):
         data = request.data
         try:
-            atr = ApplicationToReset.objects.get(code=data['code'], user_code=data['usercode'])
+            atr = ApplicationToReset.objects.get(code=data['code'], user_code=data['user_code'])
         except:
             return Response({'message': 'Not valid codes'}, status=400)
 
