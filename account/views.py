@@ -53,7 +53,7 @@ class ConfirmPhone(APIView):
 
 
         if code == user.code:
-            user.confirmed = True
+            user.phone_confirmed = True
             user.save()
             return Response({'message': 'Phone number confirmed'})
         return Response({'message': 'Wrong code'}, status=403)
