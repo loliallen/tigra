@@ -34,7 +34,7 @@ class ConfirmPhone(APIView):
         except:
             return Response({'message': 'Not valid phone number'}, status=403)
 
-        if user.confirmed:
+        if user.phone_confirmed:
             return Response({'message': 'Phone number alrady confirmed'})
 
         sendCode(user.phone, user.code)
