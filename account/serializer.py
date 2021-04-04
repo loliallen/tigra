@@ -28,7 +28,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         code = validated_data.get('code')
         used_invite = None
-        
+
         if code:
             # TODO rel ref user and created user
             used_invite = Invintation.objects.get(value=code)
@@ -39,6 +39,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user = User.objects.create(
             first_name=validated_data.get("first_name"),
             last_name=validated_data.get("last_name"),
+            email=validated_data.get("email"),
             username=validated_data.get("username"),
             device_token=validated_data.get("device_token"),
             phone=validated_data.get('phone'),

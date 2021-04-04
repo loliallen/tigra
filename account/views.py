@@ -123,15 +123,18 @@ class UserManageView(APIView):
                 user_data.save()
 
         if 'children' in data:
+            user_data = user.first()
             children_data = data['children']
+            print(children_data)
             for child in children_data:
-                if hasattr(child, 'updates'):
-                    child_model = Child.objects.filter(pk=child.id).update(**child.updates)
-                if hasattr(child, 'delete'):
-                    Child.objects.filter(pk=child.id).delete()
-                if hasattr(child, 'add'):
-                    user_data = user.first()
-                    _child = Child(**child.data)
+                print(child)
+                if 'updates' in child:
+                    child_model = user_data.children.filter(pk=child['id']).update(**child['updates'])
+                elif 'delete' in child:
+                    user_data.children.filter(pk=child['id']).delete()
+                elif 'add' in child:
+                    print("hasattr add")
+                    _child = Child(**child['data'])
                     _child.save()
                     user_data.children.add(_child)
                     user_data.save()
