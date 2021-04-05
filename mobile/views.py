@@ -49,7 +49,7 @@ class VisitListView(APIView):
         except ObjectDoesNotExist:
             return Response({'message', 'Hash Does Not Exist'}, status=403)
         user = tmpHash.user
-
+        tmpHash.delete()
         responseData = CreateUserSerializer(user)
 
         return Response(responseData.data)
@@ -126,8 +126,8 @@ class VisitsView(APIView):
     def get(self, request):
         userId = request.user.id
         userModel = User.objects.get(pk=userId)
-
-        hash_object = hashlib.sha512(str(userId).encode())
+        ts = int(time())
+        hash_object = hashlib.sha512(str(userId) + str(ts).encode())
         hash_str = hash_object.hexdigest()
         tmpHash = None
 
