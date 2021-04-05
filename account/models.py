@@ -24,7 +24,7 @@ class Child(models.Model):
 
 class User(AbstractUser):
     phone = models.CharField(max_length=12, unique=True)
-    email = models.TextField(unique=True)
+    email = models.EmailField()
     username = models.TextField(unique=True)
     phone_code = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
     phone_confirmed = models.BooleanField(default=False, blank=True)
