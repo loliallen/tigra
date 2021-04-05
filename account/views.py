@@ -67,7 +67,7 @@ class InvitationsViewSet(ViewSet):
 
         user = User.objects.get(pk=userId)
 
-        invintation = InvintationSerializer(data={ "creator": user })
+        invintation = InvintationSerializer(data={ "creator": user.id })
         if not invintation.is_valid():
             return Response(invintation.errors)
 
