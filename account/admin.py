@@ -55,7 +55,7 @@ class CustomUserAdmin(UserAdmin):
         )}),
     )
 
+admin.site.register(TmpHash)
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Child)
 admin.site.register(Invintation)
-admin.site.register(TmpHash)

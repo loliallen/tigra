@@ -127,7 +127,7 @@ class VisitsView(APIView):
         userId = request.user.id
         userModel = User.objects.get(pk=userId)
         ts = int(time())
-        hash_object = hashlib.sha512(str(userId) + str(ts).encode())
+        hash_object = hashlib.sha512((str(userId) + str(ts)).encode())
         hash_str = hash_object.hexdigest()
         tmpHash = None
 
