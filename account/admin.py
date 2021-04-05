@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User, Child, Invintation
+from .models import User, Child, Invintation, TmpHash
 # Register your models here.
 
 
@@ -58,3 +58,4 @@ class CustomUserAdmin(UserAdmin):
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Child)
 admin.site.register(Invintation)
+admin.site.register(TmpHash)
