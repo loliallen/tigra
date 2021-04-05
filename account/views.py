@@ -72,7 +72,7 @@ class InvitationsViewSet(ViewSet):
             return Response(invintation.errors)
 
         invintation.save()
-        user.my_intintations.add(invintation)
+        user.my_invintations.add(invintation)
         user.save()
 
 
