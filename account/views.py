@@ -162,7 +162,7 @@ class ResetPasswordView(APIView):
         atr.save()
 
         sendCode(phone, atr.code)
-        return Response({'message': 'The code was sent to your phone', code: atr.user_code})
+        return Response({'message': 'The code was sent to your phone', "code": atr.user_code})
 
     def put(self, request):
         data = request.data
