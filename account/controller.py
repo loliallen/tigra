@@ -1,8 +1,8 @@
 import requests
 from requests.auth import HTTPBasicAuth
 
-SMS_AERO_API_KEY = "p56Y8j13AhS5mvN1WUXdtDnNeGF"
-SMS_AERO_USERNAME = "savrulloevsunrise@gmail.com"
+SMS_AERO_API_KEY = "x4HVyJMavTDXEOH9PFMEr6bD1oF2"
+SMS_AERO_USERNAME = "levaya.pochta.sobaka@gmail.com"
 SMS_AERO_URL = "https://email:api_key@gate.smsaero.ru/v2/sms/send"
 
 def sendCode(phone, code):
