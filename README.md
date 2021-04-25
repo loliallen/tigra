@@ -338,6 +338,33 @@ response:
 ]
 ```
 
+### Finish a visitations
+
+> POST mobile/visits/
+
+body:
+```json
+{
+  "forRemove": [
+    1,
+    2,
+    3
+  ]
+}
+```
+
+response:
+```json
+{
+  "ok": [
+    1,
+    3,
+    "list of successed ids"
+  ]
+}
+```
+
+
 ## Invitatins
 
 ### Get my invites

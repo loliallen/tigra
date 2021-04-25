@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import signals
 from django.contrib.auth.models import AbstractUser
 
 from mobile.models import Visit
@@ -83,3 +84,33 @@ class Invintation(models.Model):
     )
     used = models.BooleanField(blank=True, default=False)
     visited = models.BooleanField(blank=True, default=False)
+
+class Notification(models.Model):
+    title = models.TextField()
+    body = models.TextField()
+    to_users = models.ManyToManyField(
+        to=User,
+        related_name="notifications",
+        default=[],
+        blank=True
+    )
+
+# callbacks
+
+def create_notification(sender, instance, action, **kwargs):
+    if action == "post_add":
+        print('sender', sender)
+        print('instance', instance)
+        print('instance.to_users', instance.to_users.all())
+        print('kwargs', kwargs)
+        title = instance.title
+        body = instance.body
+        users = instance.to_users.all()
+        tokens = []
+        for k, v in users.items():
+            tokens.append(v.device_token)
+
+        fcm.sendPush(title, body, tokens)
+# signals
+
+signals.m2m_changed.connect(receiver=create_notification, sender=Notification.to_users.through)

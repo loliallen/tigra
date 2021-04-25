@@ -144,8 +144,26 @@ class VisitsView(APIView):
         # img.save(response, "PNG")
 
         return Response({'hash': hash_str})
+    def post(self, request):
+        userId = request.user.id
+        user = None
+        try:
+            user = User.objects.get(pk=userId, is_staff=True)
+        except:
+            return Response({'message', 'Staff user not found'}, status=404)
 
-
+        data = request.data
+        forRemove = data.get('forRemove')
+        ok = []
+        for i in forRemove:
+            try:
+                visit = Visit.objects.get(pk=i)
+                visit.active = False
+                visit.save()
+                ok.append(i)
+            except:
+                pass
+        return Response({'ok', ok.join(', ')})
 
 class NotitficationView(APIView):
     def post(self, request):

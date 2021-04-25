@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User, Child, Invintation, TmpHash
+from .models import User, Child, Invintation, TmpHash, Notification
 # Register your models here.
 
 
@@ -40,7 +40,6 @@ class CustomUserAdmin(UserAdmin):
             'children',
         )}),
         ("Permissions", { 'fields' : (
-            'is_active',
             'is_staff',
             'is_superuser',
         )}),
@@ -55,7 +54,8 @@ class CustomUserAdmin(UserAdmin):
         )}),
     )
 
-admin.site.register(TmpHash)
 admin.site.register(User, CustomUserAdmin)
+admin.site.register(Notification)
+admin.site.register(TmpHash)
 admin.site.register(Child)
 admin.site.register(Invintation)

@@ -78,11 +78,28 @@ class InvitationsViewSet(ViewSet):
 
         return Response(invintation.data)
 
+    @action(detail=False, methods=['post'])
+    def use(self, request):
+        code = request.data.get('code')
+
+        try:
+            invintation = Invintation.objects.get(value=code, used=False)
+        except:
+            return Response({'message': 'Code already used of doesn\'t exsits'})
+
+        user = User.objects.get(pk=request.user.id)
+        user.used_invintation = invintation
+        user.save()
+        invintation.used = True
+        invintation.save()
+        data = InvintationSerializer(invintation)
+        return Response(data.data)
+
+
 class UserModelView(ModelViewSet):
     permission_classes=[IsAuthenticated]
     serializer_class = CreateUserSerializer
     queryset = User.objects.all()
-
 
 class UserManageView(APIView):
     permission_classes=[IsAuthenticated]
@@ -135,7 +152,6 @@ class UserManageView(APIView):
 
         return Response(user_data.data)
 
-
 class ResetPasswordView(APIView):
     def get(self, request):
         params = request.query_params
@@ -179,7 +195,6 @@ class ResetPasswordView(APIView):
         atr.delete()
         return Response({'message': 'New password is set'})
 
-
 class UserInfo(APIView):
     permission_classes=[IsAuthenticated]
     def get(self, request):
@@ -202,3 +217,15 @@ class DeviceTokenView(APIView):
         user.device_token = data['token']
 
         return Response({'message': "Token updated"})
+
+class UseInvintation(ViewSet):
+    def use(self, request):
+        req_data = request.data
+
+        try:
+            invintation = Invintation.objects.get(code=req_data.code, used=False)
+        except:
+            return Response({'message': 'Code already used of doesn\'t exsits'})
+
+        data = InvintationSerializer(invintation)
+        return Response(data.data)
