@@ -23,3 +23,12 @@ class Visit(models.Model):
         default=None,
         null=True
     )
+
+    def __str__(self):
+        date = "~~.~~.~~~~"
+        if self.date != None:
+            date = self.date
+        duration = "~~:~~"
+        if self.duration != None:
+            duration = self.duration / 60
+        return "{} - {} mins".format(date, duration)

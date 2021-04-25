@@ -11,6 +11,12 @@ import random
 def createCode():
     return ''.join([random.choice(digits + ascii_uppercase) for i in range(6)])
 
+def createCodeDigits6():
+    return ''.join([random.choice(digits) for i in range(6)])
+
+def createCodeDigits4():
+    return ''.join([random.choice(digits) for i in range(4)])
+
 SEX_CHOICES = (
     ('F', 'female'),
     ('M', 'male'),
@@ -27,7 +33,7 @@ class User(AbstractUser):
     phone = models.CharField(max_length=12, unique=True)
     email = models.EmailField()
     username = models.TextField(unique=True)
-    phone_code = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
+    phone_code = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6)
     phone_confirmed = models.BooleanField(default=False, blank=True)
     device_token = models.TextField(default="")
     used_invintation = models.ForeignKey(
@@ -75,7 +81,7 @@ class ApplicationToReset(models.Model):
     user_code = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
 
 class Invintation(models.Model):
-    value = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
+    value = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6)
     creator = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
