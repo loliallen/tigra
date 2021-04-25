@@ -7,13 +7,13 @@ from .models import User, Invintation, Child
 class ChildSerializer(serializers.ModelSerializer):
     class Meta:
         model = Child
-        fields =( "__all__",)
+        fields = "__all__"
 
 
 class InvintationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invintation
-        fields = ("__all__",)
+        fields = "__all__"
 
 class CreateUserSerializer(UserCreateSerializer):
 
