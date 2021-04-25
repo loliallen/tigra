@@ -31,6 +31,7 @@ class CustomUserAdmin(UserAdmin):
         ("Confirmation", { 'fields' : (
             'phone_code',
             'phone_confirmed',
+            'device_token',
         )}),
         ("Personal Info", { 'fields' : (
             'email',
