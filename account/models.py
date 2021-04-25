@@ -63,6 +63,7 @@ class User(AbstractUser):
 
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = (
+        "username",
         "first_name",
         "last_name",
         "device_token",
