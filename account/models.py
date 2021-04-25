@@ -113,7 +113,7 @@ def create_notification(sender, instance, action, **kwargs):
         body = instance.body
         users = instance.to_users.all()
         tokens = []
-        for k, v in users.items():
+        for v in users:
             tokens.append(v.device_token)
 
         fcm.sendPush(title, body, tokens)

@@ -144,6 +144,7 @@ class VisitsView(APIView):
         # img.save(response, "PNG")
 
         return Response({'hash': hash_str})
+
     def post(self, request):
         userId = request.user.id
         user = None
