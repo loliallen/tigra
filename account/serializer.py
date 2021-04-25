@@ -42,8 +42,6 @@ class CreateUserSerializer(UserCreateSerializer):
         user = User.objects.create(
             first_name=validated_data.get("first_name"),
             last_name=validated_data.get("last_name"),
-            email=validated_data.get("email"),
-            username=validated_data.get("username"),
             device_token=validated_data.get("device_token"),
             phone=validated_data.get('phone'),
             password=make_password(validated_data.get('password')),

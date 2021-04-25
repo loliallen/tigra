@@ -60,7 +60,8 @@ class User(AbstractUser):
     REQUIRED_FIELDS = (
         "first_name",
         "last_name",
-        "username",
+        "inv_code",
+        "device_token",
     )
 
 class TmpHash(models.Model):
