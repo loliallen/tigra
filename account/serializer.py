@@ -24,7 +24,7 @@ class CreateUserSerializer(UserCreateSerializer):
 
     class Meta:
         model = User
-        fields = ("__all_", "my_invintations")
+        fields = ("__all__",)
 
     def create(self, validated_data):
         print(validated_data.__dict__)
