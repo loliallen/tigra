@@ -114,7 +114,8 @@ def create_notification(sender, instance, action, **kwargs):
         users = instance.to_users.all()
         tokens = []
         for v in users:
-            tokens.append(v.device_token)
+            if len(v.device_token) > 5:
+                tokens.append(v.device_token)
 
         fcm.sendPush(title, body, tokens)
 # signals
