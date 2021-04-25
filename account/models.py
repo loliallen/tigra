@@ -31,6 +31,7 @@ class Child(models.Model):
 
 class User(AbstractUser):
     phone = models.CharField(max_length=12, unique=True)
+    username = models.TextField(default="username", blank=False)
     phone_code = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6)
     phone_confirmed = models.BooleanField(default=False, blank=True)
     device_token = models.TextField(default="")
