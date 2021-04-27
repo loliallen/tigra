@@ -215,6 +215,7 @@ class DeviceTokenView(APIView):
         except:
             return Response({'message': 'User not found, please provide token'}, status=403)
         user.device_token = data['token']
+        user.save()
 
         return Response({'message': "Token updated"})
 
