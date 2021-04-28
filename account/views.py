@@ -224,7 +224,7 @@ class UseInvintation(APIView):
     def put(self, request):
         req_data = request.data
         try:
-            invintation = Invintation.objects.get(code=req_data.code, used=False)
+            invintation = Invintation.objects.get(value=req_data.code, used=False)
         except:
             return Response({'message': 'Code already used of doesn\'t exsits'})
         data = InvintationSerializer(invintation)
@@ -234,7 +234,7 @@ class UseInvintation(APIView):
         req_data = request.data
         userId = request.user.id
         try:
-            invintation = Invintation.objects.get(code=req_data.get('code'), used=False)
+            invintation = Invintation.objects.get(value=req_data.get('code'), used=False)
         except:
             return Response({'message': 'Code already used of doesn\'t exsits'})
 
