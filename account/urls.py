@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
-from .views import ConfirmPhone, InvitationsViewSet, UserManageView, UserInfo, ResetPasswordView, DeviceTokenView
+from .views import UseInvintation, ConfirmPhone, InvitationsViewSet, UserManageView, UserInfo, ResetPasswordView, DeviceTokenView
 
 router = routers.SimpleRouter()
 router.register(r'invite', InvitationsViewSet, basename="invite")
@@ -15,5 +15,6 @@ urlpatterns = [
     path('manage/', UserManageView.as_view()),
     path('about/me/', UserInfo.as_view()),
     path('reset_password/', ResetPasswordView.as_view()),
+    path('use/invintation/', UseInvintation.as_view()),
     path('device/', DeviceTokenView.as_view()),
 ]

@@ -219,14 +219,30 @@ class DeviceTokenView(APIView):
 
         return Response({'message': "Token updated"})
 
-class UseInvintation(ViewSet):
-    def use(self, request):
+class UseInvintation(APIView):
+    permission_classes=[IsAuthenticated]
+    def put(self, request):
         req_data = request.data
-
         try:
             invintation = Invintation.objects.get(code=req_data.code, used=False)
         except:
             return Response({'message': 'Code already used of doesn\'t exsits'})
+        data = InvintationSerializer(invintation)
+        return Response(data.data)
 
+    def post(self, request):
+        req_data = request.data
+        userId = request.user.id
+        try:
+            invintation = Invintation.objects.get(code=req_data.get('code'), used=False)
+        except:
+            return Response({'message': 'Code already used of doesn\'t exsits'})
+
+        user = User.objects.get(pk=userId)
+        user.used_invintation = invintation
+        user.save()
+
+        invintation.used=True
+        invintation.save()
         data = InvintationSerializer(invintation)
         return Response(data.data)

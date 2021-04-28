@@ -365,7 +365,7 @@ response:
 ```
 
 
-## Invitatins
+## Invitations
 
 ### Get my invites
 > GET account/invite/
@@ -389,6 +389,51 @@ response:
 body:
 ```json
 
+```
+
+response:
+```json
+{
+    "id": 1,
+    "value": "9RA7YM",
+    "used": false,
+    "visited": true,
+    "creator": 1
+}
+```
+
+### Use invintations
+
+#### Check invintation
+> PUT account/use/invintation/
+
+body:
+```json
+{
+  "code": "somecode"
+}
+```
+
+response:
+```json
+{
+    "id": 1,
+    "value": "9RA7YM",
+    "used": false,
+    "visited": true,
+    "creator": 1
+}
+```
+
+
+#### Use invintation
+> POST account/use/invintation/
+
+body:
+```json
+{
+  "code": "somecode"
+}
 ```
 
 response:
