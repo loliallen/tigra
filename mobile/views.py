@@ -161,10 +161,10 @@ class VisitsView(APIView):
                 visit = Visit.objects.get(pk=i)
                 visit.active = False
                 visit.save()
-                ok.append(i)
+                ok.append(str(i))
             except:
                 pass
-        return Response({'ok', ok.join(', ')})
+        return Response({'ok', ', '.join(ok)})
 
 class NotitficationView(APIView):
     def post(self, request):
