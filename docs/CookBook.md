@@ -32,19 +32,19 @@ git clone ...
 генерируются в [консоли firebase](https://console.firebase.google.com)
 в разделе `Project Settings` -> `Service Account` -> `Generate 
 new private key`
-4) Развернуть локально базу:
-```bash
-docker-compose up -d db
-```
-4) Накатить миграции
-```bash
-docker-compose up web_migrate
-```
-5) Собрать билд
+4) Собрать билд
 ```bash
 docker-compose build web
 ```
-6) Запустить
+5) Развернуть локально базу:
+```bash
+docker-compose up -d db
+```
+6) Накатить миграции
+```bash
+docker-compose up web_migrate
+```
+7) Запустить
 ```bash
 docker-compose up -d web_run
 ```
