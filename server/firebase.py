@@ -6,7 +6,7 @@ import os
 import firebase_admin
 from firebase_admin import credentials, messaging
 
-cred_abs_path = os.environ.get('FIREBASE_CRED')
+cred_abs_path = os.environ.get('FIREBASE_CRED', "creds.json")
 cred = credentials.Certificate(cred_abs_path)
 app = firebase_admin.initialize_app(cred)
 
