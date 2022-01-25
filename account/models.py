@@ -1,3 +1,5 @@
+import logging
+
 from django.db import models
 from django.db.models import signals
 from django.contrib.auth.models import AbstractUser
@@ -6,7 +8,9 @@ from mobile.models import Visit
 
 from string import digits, ascii_uppercase
 import random
-# Create your models here.
+
+
+logger = logging.getLogger(__name__)
 
 def createCode():
     return ''.join([random.choice(digits + ascii_uppercase) for i in range(6)])
@@ -102,22 +106,22 @@ class Notification(models.Model):
     )
 
 # callbacks
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-def create_notification(sender, instance, action, **kwargs):
-    if action == "post_add":
-        print('sender', sender)
-        print('instance', instance)
-        print('instance.to_users', instance.to_users.all())
-        print('kwargs', kwargs)
-        title = instance.title
-        body = instance.body
-        users = instance.to_users.all()
-        tokens = []
-        for v in users:
-            if len(v.device_token) > 5:
-                tokens.append(v.device_token)
 
-        fcm.sendPush(title, body, tokens)
+@receiver(post_save, sender=Notification)
+def create_notification(sender, instance, **kwargs):
+    logger.info('create_notification')
+    logger.info(f'sender {sender}, instance {instance}, '
+                f'instance.to_users {instance.to_users.all()}, kwargs {kwargs}')
+    users = instance.to_users.all()
+    tokens = []
+    for v in users:
+        if len(v.device_token) > 5:
+            tokens.append(v.device_token)
+
+    fcm.sendPush(instance.title, instance.body, tokens)
 # signals
 
-signals.m2m_changed.connect(receiver=create_notification, sender=Notification.to_users.through)
+#signals.m2m_changed.connect(receiver=create_notification, sender=Notification.to_users.through)
