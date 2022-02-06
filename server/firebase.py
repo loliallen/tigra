@@ -14,15 +14,15 @@ cred = credentials.Certificate(cred_abs_path)
 app = firebase_admin.initialize_app(cred)
 
 
-def sendPush(title, msg, registration_token, dataObject = None):
-    logger.info('trying to send push')
+def sendPush(title, msg, registration_tokens, dataObject = None):
+    logger.info(f'trying to send push {title}: {msg},  {registration_tokens},  {dataObject}')
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
             title=title,
             body=msg
         ),
         data=dataObject,
-        tokens=registration_token
+        tokens=registration_tokens
     )
     response = messaging.send_multicast(message)
     data = [{attr: getattr(item, attr, None) for attr in ['success', '_exception', 'message_id']} for item in response.responses]
