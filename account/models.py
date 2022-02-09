@@ -31,6 +31,9 @@ class Child(models.Model):
     age = models.IntegerField()
     sex = models.TextField(choices=SEX_CHOICES)
 
+    def __str__(self):
+        return self.name
+
 
 
 class User(AbstractUser):
