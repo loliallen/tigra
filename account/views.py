@@ -1,3 +1,5 @@
+import json
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet, ModelViewSet
@@ -134,6 +136,8 @@ class UserManageView(APIView):
         if 'children' in data:
             user_data = user.first()
             children_data = data['children']
+            if isinstance(children_data, str):
+                children_data = json.loads(children_data)
             print(children_data)
             for child in children_data:
                 print(child)
