@@ -86,8 +86,8 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
-    'serializers': {
-        'user': 'account.serializer.CreateUserSerializer',
+    'SERIALIZERS': {
+        'user': 'account.serializer.GetUserSerializer',
     },
     "LOGIN_FIELD": "phone"
 }

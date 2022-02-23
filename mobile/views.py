@@ -72,18 +72,18 @@ class VisitListView(APIView):
             vis = Visit(
                 is_free=True,
                 date=None,
-                is_active=False
+                is_active=False,
+                user=creator,
             )
             vis.save()
             invite.visited = True
             invite.save()
-            creator.visits.add(vis)
             # send notification
             # fcm.sendPush(title=TITLE, msg=MSG, registration_token=[creator.device_token])
 
 
-        vis = user.visits.last()
-        vis_len = len(user.visits.all())
+        vis = user.visits_user.last()
+        vis_len = len(user.visits_user.all())
 
         # если чуть выше мы создали бесплатное посещение по приглашению - то дозаполняем его
         if vis != None and vis.duration == None and vis.is_free:
@@ -99,10 +99,10 @@ class VisitListView(APIView):
                 is_free=False,
                 duration=userDuration,
                 end=datetime.fromtimestamp(dateNowSec() + userDuration),
-                staff=staff
+                staff=staff,
+                user=user,
             )
             vis.save()
-            user.visits.add(vis)
         user.save()
 
         # если это 4ое посещение - то создаем беслпатное 5ое пока как загрушку,
@@ -112,10 +112,10 @@ class VisitListView(APIView):
                 is_free=True,
                 date=None,
                 staff=staff,
-                is_active=False
+                is_active=False,
+                user=user,
             )
             vis_.save()
-            user.visits.add(vis_)
 
         responseData = VisitSerializer(vis)
 

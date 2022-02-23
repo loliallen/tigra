@@ -23,7 +23,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CustomVisitSerializer(serializers.ModelSerializer):
-    visiter = UserSerializer(many=True)
+    visiter = UserSerializer(source='user')
+
     class Meta:
         model = Visit
         fields = "__all__"
+
+    # костыль для обратной совместимости c админским приложением,
+    # потому что раньше отношение было ManyToMany
+    def to_representation(self, instance):
+        data = super(CustomVisitSerializer, self).to_representation(instance)
+        data['visiter'] = [data['visiter']]
+        return data
