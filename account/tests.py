@@ -158,7 +158,42 @@ class InviteTest(TestCase):
 
     def test_create_invite(self):
         client, user = get_auth_client(self)
+        new_client, new_user = get_auth_client(self)
+
+        # Создаем код для приглашения
         response = client.post('/account/invite/')
         self.assertEqual(response.status_code, 200)
         resp_data = response.json()
-        print(resp_data)
+        self.assertEqual(resp_data['used'], False)
+        self.assertEqual(resp_data['visited'], False)
+        self.assertEqual(resp_data['creator'], user.id)
+        invite_id, value = resp_data['id'], resp_data['value']
+
+        # Проверяем наличие кода у себя
+        response = client.get('/account/invite/')
+        resp_data = response.json()
+        self.assertEqual(resp_data[0]['id'], invite_id)
+        self.assertEqual(resp_data[0]['value'], value)
+        self.assertEqual(resp_data[0]['used'], False)
+        self.assertEqual(resp_data[0]['visited'], False)
+        self.assertEqual(resp_data[0]['creator'], user.id)
+
+        # Проверяем наличие кода новым пользователем ???
+        response = new_client.put('/account/use/invintation/', data={'code': value})
+        resp_data = response.json()
+        self.assertEqual(resp_data['id'], invite_id)
+        self.assertEqual(resp_data['value'], value)
+        self.assertEqual(resp_data['used'], False)
+        self.assertEqual(resp_data['visited'], False)
+        self.assertEqual(resp_data['creator'], user.id)
+
+        # Апрувим этот код новым пользователем
+        response = new_client.post('/account/use/invintation/', data={'code': value})
+        resp_data = response.json()
+        self.assertEqual(resp_data['id'], invite_id)
+        self.assertEqual(resp_data['value'], value)
+        self.assertEqual(resp_data['used'], True)
+        self.assertEqual(resp_data['visited'], False)
+        self.assertEqual(resp_data['creator'], user.id)
+        new_user.refresh_from_db()
+        self.assertEqual(new_user.used_invintation.id, invite_id)
