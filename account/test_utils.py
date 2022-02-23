@@ -1,12 +1,19 @@
 import factory.fuzzy
+from rest_framework.test import APIClient
 
-from account.models import User
+from account.test_factories import UserFactory
 
 
-class UserFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = User
-
-    username = factory.Faker('name')
-    password = factory.PostGenerationMethodCall('set_password', 'user1!1')
-    phone = factory.Faker('ssn', locale='ru_RU')
+def get_auth_client(test_case, is_admin=False):
+    client = APIClient()
+    password = 'P@ssword'
+    user = UserFactory(password=password, is_staff=is_admin)
+    response = client.post('/account/token/login', data={
+        'phone': user.phone,
+        'password': password,
+    })
+    test_case.assertEqual(response.status_code, 200)
+    test_case.assertIn('auth_token', response.json())
+    auth_token = response.json()['auth_token']
+    client.credentials(HTTP_AUTHORIZATION=f'Token {auth_token}')
+    return client, user

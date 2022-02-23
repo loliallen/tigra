@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.core.exceptions import ObjectDoesNotExist
 
 from account.models import User, TmpHash
@@ -28,7 +28,7 @@ def dateNowSec():
     return time()
 
 class VisitListView(APIView):
-    permission_classes=[IsAuthenticated]
+    permission_classes=[IsAuthenticated, IsAdminUser]
     """
         Check user info
     """
@@ -59,13 +59,13 @@ class VisitListView(APIView):
         staff = request.user
 
         userId = data.get('user_id')
-        userDuration = data.get('duration')
+        userDuration = int(data.get('duration'))
         try:
             user = User.objects.get(pk=userId)
         except ObjectDoesNotExist:
             return Response({'message', 'User Does Not Exist'}, status=403)
 
-
+        # это посещение по приглашению то оно бесплатное
         if user.used_invintation != None and len(user.visits.all()) == 0 and user.used_invintation.visited != True:
             invite = user.used_invintation
             creator = user.used_invintation.creator
@@ -85,12 +85,15 @@ class VisitListView(APIView):
         vis = user.visits.last()
         vis_len = len(user.visits.all())
 
+        # если чуть выше мы создали бесплатное посещение по приглашению - то дозаполняем его
         if vis != None and vis.duration == None and vis.is_free:
             vis.duration = userDuration
             vis.staff = staff
             vis.date = now()
+            vis.is_active = True
             vis.end = datetime.fromtimestamp(dateNowSec() + userDuration)
             vis.save()
+        # иначе это обычное посещение
         else:
             vis = Visit(
                 is_free=False,
@@ -102,6 +105,8 @@ class VisitListView(APIView):
             user.visits.add(vis)
         user.save()
 
+        # если это 4ое посещение - то создаем беслпатное 5ое пока как загрушку,
+        # которую при след. посещении дозаполним
         if (vis_len+2) % 5 == 0:
             vis_ = Visit(
                 is_free=True,
