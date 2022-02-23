@@ -30,11 +30,17 @@ class Child(models.Model):
     name = models.TextField()
     age = models.IntegerField()
     sex = models.TextField(choices=SEX_CHOICES)
+    my_parent = models.ForeignKey(
+        to='account.User',
+        related_name='children',
+        on_delete=models.CASCADE,
+        blank=True,
+        default=None,
+        null=True
+    )
 
     def __str__(self):
         return self.name
-
-
 
 class User(AbstractUser):
     phone = models.CharField(max_length=12, unique=True)
@@ -55,18 +61,18 @@ class User(AbstractUser):
         default=[],
         blank=True
     )
-    children = models.ManyToManyField(
-        to=Child,
-        related_name="parent",
-        default=[],
-        blank=True
-    )
-    visits = models.ManyToManyField(
-        to=Visit,
-        related_name="visiter",
-        default=[],
-        blank=True
-    )
+    # children = models.ManyToManyField(
+    #     to=Child,
+    #     related_name="parent",
+    #     default=[],
+    #     blank=True
+    # )
+    # visits = models.ManyToManyField(
+    #     to=Visit,
+    #     related_name="visiter",
+    #     default=[],
+    #     blank=True
+    # )
 
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = (
@@ -75,6 +81,10 @@ class User(AbstractUser):
         "last_name",
         "device_token",
     )
+
+    # @property
+    # def my_visits(self):
+    #     return self.visits_user.all()
 
 class TmpHash(models.Model):
     hash = models.TextField()

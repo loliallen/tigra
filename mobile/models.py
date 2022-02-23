@@ -1,9 +1,7 @@
 from django.db import models
 
 from datetime import datetime
-import pytz
 
-# Create your models here.
 
 def now():
     return datetime.now()
@@ -15,9 +13,18 @@ class Visit(models.Model):
     end = models.DateTimeField(default=None, blank=True, null=True)
     is_free = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    user = models.ForeignKey(
+        to='account.User',
+        related_name='visits_user',
+        on_delete=models.CASCADE,
+        blank=True,
+        default=None,
+        null=True
+    )
 
     staff = models.ForeignKey(
         to='account.User',
+        related_name='visits_staff',
         on_delete=models.CASCADE,
         blank=True,
         default=None,

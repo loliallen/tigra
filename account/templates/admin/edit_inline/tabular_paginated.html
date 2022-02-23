@@ -1,0 +1,13 @@
+{% load i18n admin_list %}
+
+{% include 'admin/edit_inline/tabular.html' %}
+
+{% block after_inline %}
+    <div class="suit-tab suit-tab-relations">
+        {% with inline_admin_formset.formset.cl as cl %}
+            {% if cl.paginator %}
+                {% pagination cl %}
+            {% endif %}
+        {% endwith %}
+    </div>
+{% endblock %}
