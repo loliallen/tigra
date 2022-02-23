@@ -147,7 +147,7 @@ class UserManageView(APIView):
                     user_data.children.filter(pk=child['id']).delete()
                 elif 'add' in child:
                     print("hasattr add")
-                    _child = Child(**child['data'], my_parent=user)
+                    _child = Child(**child['data'], my_parent=user_data)
                     _child.save()
                     user_data.save()
 

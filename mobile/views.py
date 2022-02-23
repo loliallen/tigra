@@ -66,7 +66,7 @@ class VisitListView(APIView):
             return Response({'message', 'User Does Not Exist'}, status=403)
 
         # это посещение по приглашению то оно бесплатное
-        if user.used_invintation != None and len(user.visits.all()) == 0 and user.used_invintation.visited != True:
+        if user.used_invintation != None and len(user.visits_user.all()) == 0 and user.used_invintation.visited != True:
             invite = user.used_invintation
             creator = user.used_invintation.creator
             vis = Visit(
