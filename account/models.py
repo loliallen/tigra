@@ -109,22 +109,20 @@ class Notification(models.Model):
     )
 
 # callbacks
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 
-@receiver(post_save, sender=Notification)
-def create_notification(sender, instance, **kwargs):
-    logger.info('create_notification')
-    logger.info(f'sender {sender}, instance {instance}, '
-                f'instance.to_users {instance.to_users.all()}, kwargs {kwargs}')
-    users = instance.to_users.all()
-    tokens = []
-    for v in users:
-        if len(v.device_token) > 5:
-            tokens.append(v.device_token)
+def create_notification(sender, instance, action, **kwargs):
+    if action == "post_add":
+        logger.info('create_notification')
+        logger.info(f'sender {sender}, instance {instance}, '
+                    f'instance.to_users {instance.to_users.all()}, kwargs {kwargs}')
+        users = instance.to_users.all()
+        tokens = []
+        for v in users:
+            if len(v.device_token) > 5:
+                tokens.append(v.device_token)
 
-    fcm.sendPush(instance.title, instance.body, tokens)
+        fcm.sendPush(instance.title, instance.body, tokens)
 # signals
 
-#signals.m2m_changed.connect(receiver=create_notification, sender=Notification.to_users.through)
+signals.m2m_changed.connect(receiver=create_notification, sender=Notification.to_users.through)
