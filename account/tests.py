@@ -5,6 +5,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from account.models import User
+from account.test_factories import InvintationFactory
 from account.test_utils import get_auth_client
 
 
@@ -22,7 +23,7 @@ class RegisterTest(TestCase):
     def test_register(self):
         # пытаемся создать юзера
         response = self.client.post('/account/users/', data={**self.auth_data, **self.register_data})
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 201, response.json())
         user = User.objects.latest('id')
         self.assertTrue(user)
         self.assertEqual(user.username, self.register_data['username'])
@@ -35,8 +36,20 @@ class RegisterTest(TestCase):
 
         # в ответ на логин получаем токен
         response = self.client.post('/account/token/login', data=self.auth_data)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200, response.json())
         self.assertIn('auth_token', response.json())
+
+    def test_register_with_invintation_code(self):
+        # пытаемся создать юзера
+        invintation = InvintationFactory()
+        data = {**self.auth_data, **self.register_data, "inv_code": invintation.value}
+        response = self.client.post('/account/users/', data)
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.latest('id')
+        self.assertTrue(user)
+        self.assertEqual(user.username, self.register_data['username'])
+        self.assertEqual(user.phone, self.auth_data['phone'])
+        self.assertEqual(user.used_invintation.id, invintation.id)
 
 
 class AccountTest(TestCase):
