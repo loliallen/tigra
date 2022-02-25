@@ -86,11 +86,16 @@ class ChildrenAdminInline(admin.TabularInline):
     extra = 0
 
 
+class InvintationAdminInline(admin.TabularInline):
+    model = Invintation
+    extra = 0
+
+
 class CustomUserAdmin(UserAdmin):
     model = User
-    inlines = (VisitAdminInline, ChildrenAdminInline)
+    inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
 
-    readonly_fields = ('date_joined', 'last_login')
+    readonly_fields = ('date_joined', 'last_login', 'used_invintation')
 
     fieldsets = (
         (None, { 'fields' : (
@@ -119,7 +124,7 @@ class CustomUserAdmin(UserAdmin):
         )}),
         ("Additional Fields", {'fields': (
             # 'visits',
-            'my_invintations',
+            # 'my_invintations',
             'used_invintation',
         )}),
     )

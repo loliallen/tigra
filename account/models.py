@@ -55,12 +55,12 @@ class User(AbstractUser):
         default=None,
         null=True
     )
-    my_invintations = models.ManyToManyField(
-        to='account.Invintation',
-        related_name="creator_user",
-        default=[],
-        blank=True
-    )
+    # my_invintations = models.ManyToManyField(
+    #     to='account.Invintation',
+    #     related_name="creator_user",
+    #     default=[],
+    #     blank=True
+    # )
     # children = models.ManyToManyField(
     #     to=Child,
     #     related_name="parent",
@@ -107,6 +107,9 @@ class Invintation(models.Model):
     )
     used = models.BooleanField(blank=True, default=False)
     visited = models.BooleanField(blank=True, default=False)
+
+    def __str__(self):
+        return f"{self.value} ({self.creator.username})"
 
 class Notification(models.Model):
     title = models.TextField()

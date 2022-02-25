@@ -25,7 +25,7 @@ class CreateUserSerializer(UserCreateSerializer):
     visits = VisitSerializer(source='visits_user', many=True)
     children = ChildSerializer(many=True)
     used_invintation = InvintationSerializer()
-    my_invintations = InvintationSerializer(many=True)
+    my_invintations = InvintationSerializer(source='invintation_set', many=True)
 
     class Meta:
         model = User

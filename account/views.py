@@ -60,7 +60,7 @@ class InvitationsViewSet(ViewSet):
 
         user = User.objects.get(pk=userId)
 
-        invintation = InvintationSerializer(user.my_invintations, many=True)
+        invintation = InvintationSerializer(user.invintation_set, many=True)
 
         return Response(invintation.data)
 
@@ -72,12 +72,8 @@ class InvitationsViewSet(ViewSet):
         invintation = InvintationSerializer(data={ "creator": user.pk })
         if not invintation.is_valid():
             return Response(invintation.errors)
-
         invintation.save()
-        user.my_invintations.add(invintation.data['id'])
         user.save()
-
-
         return Response(invintation.data)
 
     @action(detail=False, methods=['post'])
