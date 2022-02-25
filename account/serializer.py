@@ -1,5 +1,3 @@
-from django.conf import settings
-from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from mobile.serializer import VisitSerializer
@@ -24,18 +22,14 @@ class GetUserSerializer(UserSerializer):
 
 class CreateUserSerializer(UserCreateSerializer):
 
-    visits = VisitSerializer(source='visits_user', many=True, read_only=True)
-    children = ChildSerializer(many=True, read_only=True)
-    used_invintation = InvintationSerializer(read_only=True)
-    my_invintations = InvintationSerializer(source='invintation_set', many=True, read_only=True)
+    visits = VisitSerializer(source='visits_user', many=True)
+    children = ChildSerializer(many=True)
+    used_invintation = InvintationSerializer()
+    my_invintations = InvintationSerializer(source='invintation_set', many=True)
 
     class Meta:
         model = User
-        fields = tuple(User.REQUIRED_FIELDS) + (
-            settings.LOGIN_FIELD,
-            settings.USER_ID_FIELD,
-            "password",
-        )
+        fields = "__all__"
 
     def create(self, validated_data):
         print(validated_data.__dict__)
@@ -61,5 +55,6 @@ class CreateUserSerializer(UserCreateSerializer):
         )
         # user.children.set(alidated_data.get("children"))
         # send verification code
-        # sendCode(user.phone, user.phone_code)
+        sendCode(user.phone, user.phone_code)
+
         return user
