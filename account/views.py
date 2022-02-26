@@ -2,17 +2,15 @@ import json
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ViewSet, ModelViewSet
+from rest_framework.viewsets import ViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-from django.core.exceptions import ObjectDoesNotExist
 
 from django.contrib.auth.hashers import make_password, check_password
 
 from .models import User, Invintation, Child, ApplicationToReset
 from .controller import sendCode
-from .serializer import InvintationSerializer, CreateUserSerializer
-# Create your views here.
+from .serializer import InvintationSerializer, CreateUserSerializer, GetUserSerializer
 
 
 UPDATE_FIELDS = ['username', 'first_name', 'last_name', 'email']
@@ -94,11 +92,6 @@ class InvitationsViewSet(ViewSet):
         return Response(data.data)
 
 
-class UserModelView(ModelViewSet):
-    permission_classes=[IsAuthenticated]
-    serializer_class = CreateUserSerializer
-    queryset = User.objects.all()
-
 class UserManageView(APIView):
     permission_classes=[IsAuthenticated]
     def get(self, request):
@@ -147,7 +140,7 @@ class UserManageView(APIView):
                     _child.save()
                     user_data.save()
 
-        user_data = CreateUserSerializer(user.first())
+        user_data = GetUserSerializer(user.first())
 
         return Response(user_data.data)
 
@@ -199,7 +192,7 @@ class UserInfo(APIView):
     def get(self, request):
         user = User.objects.get(pk=request.user.id)
 
-        data = CreateUserSerializer(user)
+        data = GetUserSerializer(user)
 
         return Response(data.data)
 

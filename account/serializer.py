@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer, UserSerializer
@@ -11,35 +10,39 @@ from djoser.conf import settings as djoser_settings
 class ChildSerializer(serializers.ModelSerializer):
     class Meta:
         model = Child
-        fields = "__all__"
+        fields = ("id", "name", "age", "sex")
 
 
 class InvintationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invintation
-        fields = "__all__"
+        fields = ("id", "creator", "value", "used", "visited")
 
 
 class GetUserSerializer(UserSerializer):
-    visits = serializers.ListField(source='visits_user', child=VisitSerializer(many=True))
-
-
-class CreateUserSerializer(UserCreateSerializer):
-
-    visits = VisitSerializer(source='visits_user', many=True, read_only=True)
+    visits = VisitSerializer(source='visits_user', many=True)
     children = ChildSerializer(many=True, read_only=True)
     used_invintation = InvintationSerializer(read_only=True)
     my_invintations = InvintationSerializer(source='invintation_set', many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = User.REQUIRED_FIELDS + User.OTHER_FIELDS_TO_SEE + User.COMPUTED + (
+            "visits", "children", "used_invintation", "my_invintations"
+        )
+        read_only_fields = fields
+
+
+class CreateUserSerializer(UserCreateSerializer):
     inv_code = serializers.CharField(required=False, write_only=True)
 
     class Meta:
         model = User
-        READ_ONLY = ("visits", "children", "used_invintation", "my_invintations")
         fields = tuple(User.REQUIRED_FIELDS) + (
             djoser_settings.LOGIN_FIELD,
             djoser_settings.USER_ID_FIELD,
             "password", "inv_code"
-        ) + READ_ONLY
+        )
 
     def validate(self, attrs):
         # Костыль, чтобы inv_code не попал в User при валидации

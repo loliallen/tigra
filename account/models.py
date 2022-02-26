@@ -55,24 +55,6 @@ class User(AbstractUser):
         default=None,
         null=True
     )
-    # my_invintations = models.ManyToManyField(
-    #     to='account.Invintation',
-    #     related_name="creator_user",
-    #     default=[],
-    #     blank=True
-    # )
-    # children = models.ManyToManyField(
-    #     to=Child,
-    #     related_name="parent",
-    #     default=[],
-    #     blank=True
-    # )
-    # visits = models.ManyToManyField(
-    #     to=Visit,
-    #     related_name="visiter",
-    #     default=[],
-    #     blank=True
-    # )
 
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = (
@@ -81,10 +63,17 @@ class User(AbstractUser):
         "last_name",
         "device_token",
     )
+    OTHER_FIELDS_TO_SEE = (
+        "phone",
+        "email",
+    )
+    COMPUTED = (
+        "id",
+        "phone_confirmed",
+        "device_token",
+        "phone_code",
+    )
 
-    # @property
-    # def my_visits(self):
-    #     return self.visits_user.all()
 
 class TmpHash(models.Model):
     hash = models.TextField()
