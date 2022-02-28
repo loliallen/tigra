@@ -1,24 +1,17 @@
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.viewsets import ViewSet
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from django.core.exceptions import ObjectDoesNotExist
-
-from account.models import User, TmpHash
-from account.serializer import CreateUserSerializer
-from .serializer import VisitSerializer, CustomVisitSerializer
-from .models import Visit, now
-import server.firebase as fcm
-
-from datetime import datetime
+import hashlib
 from time import time
 
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-import qrcode
-
-import hashlib
-
-# Create your views here.
+import server.firebase as fcm
+from account.models import User, TmpHash
+from account.serializer import CreateUserSerializer
+from .models import Visit
+from .serializer import VisitSerializer, CustomVisitSerializer
+from .visits_logic import set_visit_if_free
 
 TITLE = "Some notification title"
 MSG = "Some msg body lol kek lorem impus"
@@ -65,60 +58,14 @@ class VisitListView(APIView):
         except ObjectDoesNotExist:
             return Response({'message', 'User Does Not Exist'}, status=403)
 
-        # это посещение по приглашению то оно бесплатное
-        if user.used_invintation != None and len(user.visits_user.all()) == 0 and user.used_invintation.visited != True:
-            invite = user.used_invintation
-            creator = user.used_invintation.creator
-            vis = Visit(
-                is_free=True,
-                date=None,
-                is_active=False,
-                user=creator,
-            )
-            vis.save()
-            invite.visited = True
-            invite.save()
-            # send notification
-            # fcm.sendPush(title=TITLE, msg=MSG, registration_token=[creator.device_token])
-
-
-        vis = user.visits_user.last()
-        vis_len = len(user.visits_user.all())
-
-        # если чуть выше мы создали бесплатное посещение по приглашению - то дозаполняем его
-        if vis != None and vis.duration == None and vis.is_free:
-            vis.duration = userDuration
-            vis.staff = staff
-            vis.date = now()
-            vis.is_active = True
-            vis.end = datetime.fromtimestamp(dateNowSec() + userDuration)
-            vis.save()
-        # иначе это обычное посещение
-        else:
-            vis = Visit(
-                is_free=False,
-                duration=userDuration,
-                end=datetime.fromtimestamp(dateNowSec() + userDuration),
-                staff=staff,
-                user=user,
-            )
-            vis.save()
-        user.save()
-
-        # если это 4ое посещение - то создаем беслпатное 5ое пока как загрушку,
-        # которую при след. посещении дозаполним
-        if (vis_len+2) % 5 == 0:
-            vis_ = Visit(
-                is_free=True,
-                date=None,
-                staff=staff,
-                is_active=False,
-                user=user,
-            )
-            vis_.save()
-
-        responseData = VisitSerializer(vis)
-
+        visit_obj = Visit(
+            duration=userDuration,
+            staff=staff,
+            user=user,
+        )
+        set_visit_if_free(visit_obj)
+        visit_obj.save()
+        responseData = VisitSerializer(visit_obj)
         return Response(responseData.data, status=201)
 
 

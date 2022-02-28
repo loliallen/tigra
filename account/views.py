@@ -1,17 +1,14 @@
 import json
 
+from django.contrib.auth.hashers import make_password, check_password
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import action
 
-from django.contrib.auth.hashers import make_password, check_password
-
-from .models import User, Invintation, Child, ApplicationToReset
-from .controller import sendCode
-from .serializer import InvintationSerializer, CreateUserSerializer, GetUserSerializer
-
+from account.controller import sendCode
+from account.models import User, Invintation, Child, ApplicationToReset
+from account.serializer import InvintationSerializer, CreateUserSerializer, GetUserSerializer
 
 UPDATE_FIELDS = ['username', 'first_name', 'last_name', 'email']
 
@@ -58,7 +55,7 @@ class InvitationsViewSet(ViewSet):
 
         user = User.objects.get(pk=userId)
 
-        invintation = InvintationSerializer(user.invintation_set, many=True)
+        invintation = InvintationSerializer(user.invintation_creator, many=True)
 
         return Response(invintation.data)
 
@@ -73,23 +70,6 @@ class InvitationsViewSet(ViewSet):
         invintation.save()
         user.save()
         return Response(invintation.data)
-
-    @action(detail=False, methods=['post'])
-    def use(self, request):
-        code = request.data.get('code')
-
-        try:
-            invintation = Invintation.objects.get(value=code, used=False)
-        except:
-            return Response({'message': 'Code already used of doesn\'t exsits'})
-
-        user = User.objects.get(pk=request.user.id)
-        user.used_invintation = invintation
-        user.save()
-        invintation.used = True
-        invintation.save()
-        data = InvintationSerializer(invintation)
-        return Response(data.data)
 
 
 class UserManageView(APIView):
@@ -213,28 +193,12 @@ class DeviceTokenView(APIView):
 
 class UseInvintation(APIView):
     permission_classes=[IsAuthenticated]
+
     def put(self, request):
         req_data = request.data
         try:
-            invintation = Invintation.objects.get(value=req_data.get('code'), used=False)
+            invintation = Invintation.objects.get(value=req_data.get('code'), used_by=None)
         except:
             return Response({'message': 'Code already used of doesn\'t exsits'}, status=403)
-        data = InvintationSerializer(invintation)
-        return Response(data.data)
-
-    def post(self, request):
-        req_data = request.data
-        userId = request.user.id
-        try:
-            invintation = Invintation.objects.get(value=req_data.get('code'), used=False)
-        except:
-            return Response({'message': 'Code already used of doesn\'t exsits'}, status=403)
-
-        user = User.objects.get(pk=userId)
-        user.used_invintation = invintation
-        user.save()
-
-        invintation.used=True
-        invintation.save()
         data = InvintationSerializer(invintation)
         return Response(data.data)

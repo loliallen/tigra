@@ -1,14 +1,13 @@
 import logging
+import random
+from string import digits, ascii_uppercase
 
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import signals
-from django.contrib.auth.models import AbstractUser
+
 import server.firebase as fcm
 from mobile.models import Visit
-
-from string import digits, ascii_uppercase
-import random
-
 
 logger = logging.getLogger(__name__)
 
@@ -86,16 +85,32 @@ class ApplicationToReset(models.Model):
     user_code = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
 
 class Invintation(models.Model):
-    value = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6)
+    value = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6, verbose_name='код')
     creator = models.ForeignKey(
         User,
+        related_name='invintation_creator',
         on_delete=models.CASCADE,
         blank=True,
         default=None,
         null=True
     )
-    used = models.BooleanField(blank=True, default=False)
-    visited = models.BooleanField(blank=True, default=False)
+    used_by = models.ForeignKey(
+        User,
+        related_name='invintation_used_by',
+        on_delete=models.CASCADE,
+        blank=True,
+        default=None,
+        null=True
+    )
+    is_used_by_creator = models.BooleanField(blank=True, default=False, verbose_name='использован создателем')
+
+    @property
+    def used(self) -> bool:
+        return self.used_by is not None
+
+    @property
+    def visited(self) -> bool:
+        return bool(self.used_by and self.used_by.visits_user.count() > 0)
 
     def __str__(self):
         return f"{self.value} ({self.creator.username})"

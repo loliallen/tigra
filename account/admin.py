@@ -1,16 +1,13 @@
-from django.contrib import admin
 from django import forms
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.admin import UserAdmin
-from django.db import models
+from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
+from django.contrib.auth.admin import UserAdmin
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
-
+from django.db import models
 
 from mobile.models import Visit
-from .models import User, Child, Invintation, TmpHash, Notification
-# Register your models here.
-
+from mobile.visits_logic import set_visit_if_free
+from .models import User, Child, Invintation, Notification
 
 
 class UserCreationForm(forms.ModelForm):
@@ -43,8 +40,13 @@ class VisitAdminInline(admin.TabularInline):
     model = Visit
     fk_name = 'user'
     extra = 0
+    can_delete = True
+    ordering = ('date',)
     template = 'admin/edit_inline/tabular_paginated.html'
     per_page = 5
+
+    readonly_fields = ("end", "is_free", "is_active", "staff")
+    fields = ("date", "duration", "end", "is_free", "staff")
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super().get_formset(
@@ -74,6 +76,25 @@ class VisitAdminInline(admin.TabularInline):
                 else:
                     self._queryset = page.object_list
 
+            def clean(self):
+                new_instance = False
+                for form in self.forms:
+                    current_is_new = form.instance.id is None
+                    if current_is_new:
+                        if not new_instance:
+                            new_instance = True
+                        else:
+                            raise forms.ValidationError('Не более одного нового визита')
+                super(PaginationFormSet, self).clean()
+
+            def save_before(self, request, form, formset, change):
+                for form in formset:
+                    if form.instance.staff is None:
+                        form.instance.staff = request.user
+                        set_visit_if_free(form.instance)
+                        form.instance.save()
+
+
         PaginationFormSet.per_page = self.per_page
         return PaginationFormSet
 
@@ -89,13 +110,27 @@ class ChildrenAdminInline(admin.TabularInline):
 class InvintationAdminInline(admin.TabularInline):
     model = Invintation
     extra = 0
+    can_delete = False
+    fk_name = "creator"
+
+    readonly_fields = ("value", "used", "visited", "is_used_by_creator")
+    fields = ("value", "used", "visited", "is_used_by_creator")
 
 
 class CustomUserAdmin(UserAdmin):
     model = User
     inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
 
-    readonly_fields = ('date_joined', 'last_login', 'used_invintation')
+    readonly_fields = ('date_joined', 'last_login', 'used_invintation', 'phone_code',
+            'phone_confirmed', 'device_token',)
+    list_display = ("fio", "phone", "email", "date_joined")
+
+    formfield_overrides = {
+        models.TextField: {'widget': forms.TextInput},
+    }
+
+    def fio(self, obj):
+        return f"{obj.first_name} {obj.last_name}"
 
     fieldsets = (
         (None, { 'fields' : (
@@ -106,6 +141,7 @@ class CustomUserAdmin(UserAdmin):
             'phone_code',
             'phone_confirmed',
             'device_token',
+            'used_invintation',
         )}),
         ("Personal Info", { 'fields' : (
             'email',
@@ -122,12 +158,13 @@ class CustomUserAdmin(UserAdmin):
             'date_joined',
             'last_login',
         )}),
-        ("Additional Fields", {'fields': (
-            # 'visits',
-            # 'my_invintations',
-            'used_invintation',
-        )}),
     )
+
+    def save_formset(self, request, form, formset, change):
+        if getattr(formset, 'save_before', None):
+            formset.save_before(request, form, formset, change)
+        formset.save()
+
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Notification)

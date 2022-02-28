@@ -1,10 +1,10 @@
 from django.contrib.auth.hashers import make_password
-from rest_framework import serializers
-from djoser.serializers import UserCreateSerializer, UserSerializer
-from mobile.serializer import VisitSerializer
-from .models import User, Invintation, Child
-
 from djoser.conf import settings as djoser_settings
+from djoser.serializers import UserCreateSerializer, UserSerializer
+from rest_framework import serializers
+
+from mobile.serializer import VisitSerializer
+from account.models import User, Invintation, Child
 
 
 class ChildSerializer(serializers.ModelSerializer):
@@ -23,7 +23,7 @@ class GetUserSerializer(UserSerializer):
     visits = VisitSerializer(source='visits_user', many=True)
     children = ChildSerializer(many=True, read_only=True)
     used_invintation = InvintationSerializer(read_only=True)
-    my_invintations = InvintationSerializer(source='invintation_set', many=True, read_only=True)
+    my_invintations = InvintationSerializer(source='invintation_creator', many=True, read_only=True)
 
     class Meta:
         model = User
@@ -53,9 +53,9 @@ class CreateUserSerializer(UserCreateSerializer):
         used_invite = None
 
         if self.invintation_code:
-            used_invite = Invintation.objects.get(value=self.invintation_code)
-            used_invite.used = True
-            used_invite.save()
+            used_invite = Invintation.objects.filter(value=self.invintation_code, used_by=None).first()
+            if used_invite is None:
+                raise ValueError('Пригласительный купон не найден')
 
         password = make_password(validated_data.pop('password'))
         user = User.objects.create(
@@ -63,4 +63,8 @@ class CreateUserSerializer(UserCreateSerializer):
             password=password,
             used_invintation=used_invite
         )
+
+        if used_invite:
+            used_invite.used_by = user
+            used_invite.save()
         return user

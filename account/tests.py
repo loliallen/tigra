@@ -41,7 +41,7 @@ class RegisterTest(TestCase):
 
     def test_register_with_invintation_code(self):
         # пытаемся создать юзера
-        invintation = InvintationFactory()
+        invintation = InvintationFactory(used_by=None)
         data = {**self.auth_data, **self.register_data, "inv_code": invintation.value}
         response = self.client.post('/account/users/', data)
         self.assertEqual(response.status_code, 201)
@@ -200,13 +200,3 @@ class InviteTest(TestCase):
         self.assertEqual(resp_data['visited'], False)
         self.assertEqual(resp_data['creator'], user.id)
 
-        # Апрувим этот код новым пользователем
-        response = new_client.post('/account/use/invintation/', data={'code': value})
-        resp_data = response.json()
-        self.assertEqual(resp_data['id'], invite_id)
-        self.assertEqual(resp_data['value'], value)
-        self.assertEqual(resp_data['used'], True)
-        self.assertEqual(resp_data['visited'], False)
-        self.assertEqual(resp_data['creator'], user.id)
-        new_user.refresh_from_db()
-        self.assertEqual(new_user.used_invintation.id, invite_id)

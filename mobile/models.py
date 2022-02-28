@@ -1,6 +1,6 @@
-from django.db import models
+from datetime import datetime, timedelta
 
-from datetime import datetime
+from django.db import models
 
 
 def now():
@@ -10,7 +10,6 @@ def now():
 class Visit(models.Model):
     date = models.DateTimeField(default=now, blank=True, null=True)
     duration = models.IntegerField(blank=True, null=True)
-    end = models.DateTimeField(default=None, blank=True, null=True)
     is_free = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     user = models.ForeignKey(
@@ -30,6 +29,10 @@ class Visit(models.Model):
         default=None,
         null=True
     )
+
+    @property
+    def end(self):
+        return (self.date + timedelta(seconds=self.duration or 0)).astimezone() if self.date else None
 
     def __str__(self):
         date = "~~.~~.~~~~"

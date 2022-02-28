@@ -83,18 +83,9 @@ class VisitTest(TestCase):
             # проверяем что его видит пользователь
             response = client_user.get('/account/about/me/')
             resp_data = response.json()
-            # если это визит перед бесплатным - то создастся два сразу два визита которые мы тут увидим
-            is_empty_visit_created = visit_num % free_visit_num == free_visit_num - 1
-            if is_empty_visit_created:
-                self.assertEqual(len(resp_data['visits']), visit_num + 1)
-                self.assertEqual(resp_data['visits'][-2]['id'], visit_id)
-                self.assertEqual(resp_data['visits'][-2]['is_free'], False)
-                self.assertEqual(resp_data['visits'][-1]['id'], visit_id + 1)
-                self.assertEqual(resp_data['visits'][-1]['is_free'], True)
-            else:
-                self.assertEqual(len(resp_data['visits']), visit_num)
-                self.assertEqual(resp_data['visits'][-1]['id'], visit_id)
-                self.assertEqual(resp_data['visits'][-1]['is_free'], is_free)
+            self.assertEqual(len(resp_data['visits']), visit_num)
+            self.assertEqual(resp_data['visits'][-1]['id'], visit_id)
+            self.assertEqual(resp_data['visits'][-1]['is_free'], is_free)
 
     def test_free_visit_by_invintation(self):
         client_user, user = get_auth_client(self)
@@ -102,8 +93,13 @@ class VisitTest(TestCase):
         client_admin, admin = get_auth_client(self, is_admin=True)
 
         # создаем использованное приглашение
-        new_user.used_invintation = InvintationFactory(creator=user, used=True)
+        invintation = InvintationFactory(creator=user, used_by=new_user)
+        new_user.used_invintation = invintation
         new_user.save()
+
+        self.assertEqual(invintation.used, True)
+        self.assertEqual(invintation.visited, False)
+        self.assertEqual(invintation.is_used_by_creator, False)
 
         # запрашиваем пользователем hash
         response = new_client_user.get('/mobile/visits/')
@@ -126,6 +122,10 @@ class VisitTest(TestCase):
         resp_data = response.json()
         self.assertEqual(len(resp_data['visits']), 1)
         self.assertEqual(resp_data['visits'][-1]['is_free'], False)
+
+        self.assertEqual(invintation.used, True)
+        self.assertEqual(invintation.visited, True)
+        self.assertEqual(invintation.is_used_by_creator, False)
 
         # запрашиваем пользователем hash
         response = client_user.get('/mobile/visits/')
@@ -160,3 +160,8 @@ class VisitTest(TestCase):
         resp_data = response.json()
         self.assertEqual(len(resp_data['visits']), 1)
         self.assertEqual(resp_data['visits'][-1]['is_free'], True)
+
+        invintation.refresh_from_db()
+        self.assertEqual(invintation.used, True)
+        self.assertEqual(invintation.visited, True)
+        self.assertEqual(invintation.is_used_by_creator, True)
