@@ -28,7 +28,8 @@ class GetUserSerializer(UserSerializer):
     class Meta:
         model = User
         fields = User.REQUIRED_FIELDS + User.OTHER_FIELDS_TO_SEE + User.COMPUTED + (
-            "visits", "children", "used_invintation", "my_invintations"
+            "visits", "children", "used_invintation", "my_invintations",
+            "password"  # выпилить когда фронт перестанет его использовать
         )
         read_only_fields = fields
 
