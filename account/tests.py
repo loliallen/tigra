@@ -42,7 +42,7 @@ class RegisterTest(TestCase):
     def test_register_with_invintation_code(self):
         # пытаемся создать юзера
         invintation = InvintationFactory(used_by=None)
-        data = {**self.auth_data, **self.register_data, "inv_code": invintation.value}
+        data = {**self.auth_data, **self.register_data, "code": invintation.value}
         response = self.client.post('/account/users/', data)
         self.assertEqual(response.status_code, 201)
         user = User.objects.latest('id')
@@ -50,6 +50,8 @@ class RegisterTest(TestCase):
         self.assertEqual(user.username, self.register_data['username'])
         self.assertEqual(user.phone, self.auth_data['phone'])
         self.assertEqual(user.used_invintation.id, invintation.id)
+        invintation.refresh_from_db()
+        self.assertEqual(invintation.used_by, user)
 
 
 class AccountTest(TestCase):

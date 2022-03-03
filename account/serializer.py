@@ -34,19 +34,19 @@ class GetUserSerializer(UserSerializer):
 
 
 class CreateUserSerializer(UserCreateSerializer):
-    inv_code = serializers.CharField(required=False, write_only=True)
+    code = serializers.CharField(required=False, write_only=True)
 
     class Meta:
         model = User
         fields = tuple(User.REQUIRED_FIELDS) + (
             djoser_settings.LOGIN_FIELD,
             djoser_settings.USER_ID_FIELD,
-            "password", "inv_code"
+            "password", "code"
         )
 
     def validate(self, attrs):
         # Костыль, чтобы inv_code не попал в User при валидации
-        self.invintation_code = attrs.pop('inv_code', None)
+        self.invintation_code = attrs.pop('code', None)
         return super(CreateUserSerializer, self).validate(attrs)
 
     def create(self, validated_data):
