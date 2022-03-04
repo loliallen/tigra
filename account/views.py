@@ -198,13 +198,14 @@ class DeviceTokenView(APIView):
         return Response({'message': "Token updated"})
 
 class UseInvintation(APIView):
-    permission_classes=[IsAuthenticated]
+    permission_classes=[]
 
     def put(self, request):
+        # TODO: удалить этот метод когда фронт перестанет его использовать
         req_data = request.data
         try:
             invintation = Invintation.objects.get(value=req_data.get('code'), used_by=None)
         except:
-            return Response({'message': 'Code already used of doesn\'t exsits'}, status=403)
+            return Response({'message': 'Code already used or doesn\'t exsits'}, status=403)
         data = InvintationSerializer(invintation)
         return Response(data.data)
