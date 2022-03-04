@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.auth.hashers import make_password, check_password
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -70,6 +71,11 @@ class InvitationsViewSet(ViewSet):
         invintation.save()
         user.save()
         return Response(invintation.data)
+
+    @action(detail=False, methods=['post'])
+    def use(self, request):
+        # TODO: удалить когда фронт перестанет это юзать
+        pass
 
 
 class UserManageView(APIView):
