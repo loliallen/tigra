@@ -29,8 +29,11 @@ class GetUserSerializer(UserSerializer):
         model = User
         fields = User.REQUIRED_FIELDS + User.OTHER_FIELDS_TO_SEE + User.COMPUTED + (
             "visits", "children", "used_invintation", "my_invintations",
+            # выпилить когда фронт перестанет его использовать
+            # ----
             "password", djoser_settings.LOGIN_FIELD, djoser_settings.USER_ID_FIELD,
-            "is_superuser", "phone_code", "phone_confirmed", "is_staff", "is_active", "date_joined", "last_login", "groups"  # выпилить когда фронт перестанет его использовать
+            "is_superuser", "phone_code", "phone_confirmed", "is_staff", "is_active", "date_joined", "last_login", "groups", "user_permissions"
+            # ----
         )
         read_only_fields = fields
 
