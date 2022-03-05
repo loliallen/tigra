@@ -72,11 +72,6 @@ class InvitationsViewSet(ViewSet):
         user.save()
         return Response(invintation.data)
 
-    @action(detail=False, methods=['post'])
-    def use(self, request):
-        # TODO: удалить когда фронт перестанет это юзать
-        pass
-
 
 class UserManageView(APIView):
     permission_classes=[IsAuthenticated]
@@ -207,5 +202,24 @@ class UseInvintation(APIView):
             invintation = Invintation.objects.get(value=req_data.get('code'), used_by=None)
         except:
             return Response({'message': 'Code already used or doesn\'t exsits'}, status=403)
+        data = InvintationSerializer(invintation)
+        return Response(data.data)
+
+    def post(self, request):
+        # TODO: удалить этот метод когда фронт перестанет его использовать
+
+        req_data = request.data
+        userId = request.user.id
+        try:
+            invintation = Invintation.objects.get(value=req_data.get('code')) #, used_by__isnull=False)
+        except:
+            return Response({'message': 'Code already used of doesn\'t exsits'}, status=403)
+
+        # user = User.objects.get(pk=userId)
+        # user.used_invintation = invintation
+        # user.save()
+        #
+        # invintation.used=True
+        # invintation.save()
         data = InvintationSerializer(invintation)
         return Response(data.data)

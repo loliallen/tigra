@@ -51,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'account.middleware.RemoveTokenFromCheckInvinationMiddleware'
 ]
 
 ROOT_URLCONF = 'server.urls'
