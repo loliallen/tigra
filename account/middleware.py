@@ -1,4 +1,7 @@
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 class RemoveTokenFromCheckInvinationMiddleware(object):
     def __init__(self, get_response):
@@ -14,7 +17,10 @@ class RemoveTokenFromCheckInvinationMiddleware(object):
         """
         #  TODO: удалить когда фронт перестанет слать HTTP_AUTHORIZATION в этот метод
         if request.method == 'PUT' and request.path == '/account/use/invintation/':
-            del request.META['HTTP_AUTHORIZATION']
+            if request.META.get('HTTP_AUTHORIZATION'):
+                del request.META['HTTP_AUTHORIZATION']
+        if request.method == 'POST' and request.path == '/account/users/':
+            logger.info(f"{request.body}")
         response = self.get_response(request)
         return response
 
