@@ -16,7 +16,7 @@ class RemoveTokenFromCheckInvinationMiddleware(object):
         middleware) are called.
         """
         #  TODO: удалить когда фронт перестанет слать HTTP_AUTHORIZATION в этот метод
-        if request.method == 'PUT' and request.path == '/account/use/invintation/':
+        if request.method in ['PUT', 'POST'] and request.path == '/account/use/invintation/':
             if request.META.get('HTTP_AUTHORIZATION'):
                 del request.META['HTTP_AUTHORIZATION']
         if request.method == 'POST' and request.path == '/account/users/':
