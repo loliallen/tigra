@@ -5,9 +5,8 @@ from djoser.conf import settings as djoser_settings
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
-from mobile.serializer import VisitSerializer
 from account.models import User, Invintation, Child
-
+from mobile.models import Visit
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +21,12 @@ class InvintationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invintation
         fields = ("id", "creator", "value", "used", "visited")
+
+
+class VisitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Visit
+        fields = ("id", "date", "duration", "end", "is_free", "is_active", "staff")
 
 
 class GetUserSerializer(UserSerializer):

@@ -1,29 +1,10 @@
-from rest_framework import fields, serializers
-from django.core import serializers as django_serializers
-
-from account.models import User
+from rest_framework import serializers
+from account.serializer import GetUserSerializer
 from .models import Visit
 
 
-
-
-
-class VisitSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Visit
-        fields = ("id", "date", "duration", "end", "is_free", "is_active", "staff")
-
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = "__all__"
-
-
-
 class CustomVisitSerializer(serializers.ModelSerializer):
-    visiter = UserSerializer(source='user')
+    visiter = GetUserSerializer(source='user')
 
     class Meta:
         model = Visit

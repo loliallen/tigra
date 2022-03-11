@@ -8,9 +8,9 @@ from rest_framework.views import APIView
 
 import server.firebase as fcm
 from account.models import User, TmpHash
-from account.serializer import CreateUserSerializer
+from account.serializer import CreateUserSerializer, VisitSerializer
 from .models import Visit
-from .serializer import VisitSerializer, CustomVisitSerializer
+from .serializer import CustomVisitSerializer
 from .visits_logic import set_visit_if_free
 
 TITLE = "Some notification title"
