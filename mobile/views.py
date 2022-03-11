@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 import server.firebase as fcm
 from account.models import User, TmpHash
-from account.serializer import CreateUserSerializer, VisitSerializer
+from account.serializer import CreateUserSerializer, VisitSerializer, GetUserSerializer
 from .models import Visit
 from .serializer import CustomVisitSerializer
 from .visits_logic import set_visit_if_free
@@ -43,7 +43,7 @@ class VisitListView(APIView):
             return Response({'message', 'Hash Does Not Exist'}, status=403)
         user = tmpHash.user
         tmpHash.delete()
-        responseData = CreateUserSerializer(user)
+        responseData = GetUserSerializer(user)
 
         return Response(responseData.data)
 
