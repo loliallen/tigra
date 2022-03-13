@@ -27,12 +27,10 @@ class VisitListView(APIView):
     """
     def get(self, request):
         userId = request.user.id
-
-        visits = Visit.objects.filter(staff=userId, is_active=True)
-
+        visits = Visit.objects.filter(staff=userId)
         data = CustomVisitSerializer(visits, many=True)
-
         return Response(data.data)
+
     def post(self, request):
         data = request.data
         hashStr = data.get('hash')
