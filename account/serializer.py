@@ -26,7 +26,7 @@ class InvintationSerializer(serializers.ModelSerializer):
 class VisitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Visit
-        fields = ("id", "date", "duration", "end", "is_free", "is_active", "staff")
+        fields = ("id", "date", "duration", "end", "is_free", "free_reason", "is_active", "staff")
 
 
 class GetUserSerializer(UserSerializer):

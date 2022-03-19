@@ -45,8 +45,8 @@ class VisitAdminInline(admin.TabularInline):
     template = 'admin/edit_inline/tabular_paginated.html'
     per_page = 5
 
-    readonly_fields = ("end", "is_free", "is_active", "staff")
-    fields = ("date", "duration", "end", "is_free", "staff")
+    readonly_fields = ("end", "is_free", "is_active", "free_reason", "staff")
+    fields = ("date", "duration", "end", "is_free", "free_reason", "staff")
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super().get_formset(
@@ -122,7 +122,7 @@ class CustomUserAdmin(UserAdmin):
     inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
 
     readonly_fields = ('date_joined', 'last_login', 'used_invintation', 'phone_code',
-            'phone_confirmed', 'device_token',)
+            'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
     list_display = ("fio", "phone", "email", "date_joined")
 
     formfield_overrides = {
@@ -148,7 +148,8 @@ class CustomUserAdmin(UserAdmin):
             'first_name',
             'last_name',
             'phone',
-            # 'children',
+            'count_to_free_visit',
+            'free_reason',
         )}),
         ("Permissions", { 'fields' : (
             'is_staff',

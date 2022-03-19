@@ -36,3 +36,4 @@ class VisitFactory(factory.django.DjangoModelFactory):
     is_free = False
     user = factory.SubFactory(UserFactory)
     staff = factory.SubFactory(UserFactory)
+    free_reason = None

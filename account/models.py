@@ -1,13 +1,15 @@
 import logging
 import random
 from string import digits, ascii_uppercase
+from typing import Optional
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import signals
 
 import server.firebase as fcm
-from mobile.models import Visit
+from mobile.models import Visit, FreeReason
+from mobile.visits_logic import count_to_free_visit as cnt_to_free_visit_logic
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +73,17 @@ class User(AbstractUser):
         "phone_confirmed",
         "device_token",
         "phone_code",
+        "count_to_free_visit",
+        "free_reason",
     )
+
+    @property
+    def count_to_free_visit(self) -> int:
+        return cnt_to_free_visit_logic(self)[0]
+
+    @property
+    def free_reason(self) -> Optional[FreeReason]:
+        return cnt_to_free_visit_logic(self)[1]
 
 
 class TmpHash(models.Model):
