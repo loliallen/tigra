@@ -42,10 +42,4 @@ class Visit(models.Model):
         return (self.date + timedelta(seconds=self.duration or 0)).astimezone() if self.date else None
 
     def __str__(self):
-        date = "~~.~~.~~~~"
-        if self.date != None:
-            date = self.date
-        duration = "~~:~~"
-        if self.duration != None:
-            duration = self.duration / 60
-        return "{} - {} mins".format(date, duration)
+        return f"{self.date or '~~.~~.~~~~'} - {self.duration and self.duration / 60 or '~~:~~'} mins"

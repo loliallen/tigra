@@ -3,6 +3,7 @@ from rest_framework.test import APIClient
 
 from account.test_factories import InvintationFactory, VisitFactory
 from account.test_utils import get_auth_client
+from mobile.models import FreeReason
 
 
 class VisitTest(TestCase):
@@ -87,7 +88,7 @@ class VisitTest(TestCase):
         for visit_num in range(1, free_visit_num * 3 + 1):
             # создаем посещение и проверяем что оно создалось
             is_free = bool(visit_num % free_visit_num == 0)
-            free_reason = 'CNT' if is_free else None
+            free_reason = FreeReason.COUNT if is_free else None
             self.create_visit(is_free, free_reason, client_admin, client_user, user_id, visit_num, admin)
 
     def test_free_visit_by_invintation(self):
@@ -116,7 +117,7 @@ class VisitTest(TestCase):
         # создаем посещение которое должно стать бесплатным потому использованному пригласительному купону
         user_id = user.id
         is_free = True
-        free_reason = 'INV'
+        free_reason = FreeReason.INVITE
         visit_num = 1
         self.create_visit(is_free, free_reason, client_admin, client_user, user_id, visit_num, admin)
 
@@ -141,7 +142,7 @@ class VisitTest(TestCase):
         self.assertEqual(response.status_code, 200)
         resp_data = response.json()
         self.assertEqual(resp_data['count_to_free_visit'], 1)
-        self.assertEqual(resp_data['free_reason'], 'CNT')
+        self.assertEqual(resp_data['free_reason'], FreeReason.COUNT)
 
         # создаем использованное приглашение
         invintation = InvintationFactory(creator=user, used_by=new_user)
@@ -156,11 +157,11 @@ class VisitTest(TestCase):
         self.assertEqual(response.status_code, 200)
         resp_data = response.json()
         self.assertEqual(resp_data['count_to_free_visit'], 0)
-        self.assertEqual(resp_data['free_reason'], 'INV')
+        self.assertEqual(resp_data['free_reason'], FreeReason.INVITE)
 
         user_id = user.id
         is_free = True
-        free_reason = 'INV'
+        free_reason = FreeReason.INVITE
         visit_num = paid_visit_created + 1
         self.create_visit(is_free, free_reason, client_admin, client_user, user_id, visit_num, admin)
 
@@ -168,7 +169,7 @@ class VisitTest(TestCase):
         response = client_user.get('/account/about/me/')
         resp_data = response.json()
         self.assertEqual(resp_data['count_to_free_visit'], 1)
-        self.assertEqual(resp_data['free_reason'], 'CNT')
+        self.assertEqual(resp_data['free_reason'], FreeReason.COUNT)
 
         # создаем еще один платный визит
         is_free = False
@@ -180,11 +181,11 @@ class VisitTest(TestCase):
         response = client_user.get('/account/about/me/')
         resp_data = response.json()
         self.assertEqual(resp_data['count_to_free_visit'], 0)
-        self.assertEqual(resp_data['free_reason'], 'CNT')
+        self.assertEqual(resp_data['free_reason'], FreeReason.COUNT)
 
         # создаем еще один визит -  он должен стать бесплтаным
         is_free = True
-        free_reason = 'CNT'
+        free_reason = FreeReason.COUNT
         visit_num = paid_visit_created + 3
         self.create_visit(is_free, free_reason, client_admin, client_user, user_id, visit_num, admin)
 
@@ -192,4 +193,4 @@ class VisitTest(TestCase):
         response = client_user.get('/account/about/me/')
         resp_data = response.json()
         self.assertEqual(resp_data['count_to_free_visit'], self.COUNT_TO_FREE_VISIT)
-        self.assertEqual(resp_data['free_reason'], 'CNT')
+        self.assertEqual(resp_data['free_reason'], FreeReason.COUNT)
