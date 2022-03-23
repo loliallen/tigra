@@ -5,7 +5,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from account.models import User
-from account.test_factories import InvintationFactory
+from account.test_factories import InvintationFactory, VisitFactory
 from account.test_utils import get_auth_client
 
 
@@ -73,10 +73,21 @@ class AccountTest(TestCase):
     def test_info(self):
         # проверяем наличие инфы о пользователе
         client, user = get_auth_client(self)
+        visit_model = VisitFactory(user=user)
         response = client.get('/account/about/me/')
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(data['visits'], [])
+        visit = data['visits'][0]
+        visit.pop('id')
+        visit.pop('date')
+        visit.pop('duration')
+        visit.pop('end')
+        self.assertEqual(visit, {
+            'is_free': False,
+            'free_reason': None,
+            'is_active': False,
+            'staff': visit_model.staff.id,
+        })
         self.assertEqual(data['children'], [])
         self.assertEqual(data['used_invintation'], None)
         self.assertEqual(data['my_invintations'], [])
