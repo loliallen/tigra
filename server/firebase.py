@@ -1,6 +1,3 @@
-# import time
-# from datetime import timedelta
-# from uuid import uuid4
 import logging
 import os
 import firebase_admin
@@ -30,4 +27,3 @@ def sendPush(title, msg, registration_tokens, dataObject = None):
     response = messaging.send_multicast(message)
     data = [{attr: getattr(item, attr, None) for attr in ['success', '_exception', 'message_id']} for item in response.responses]
     logger.info(f'data {data}')
-    # logger.info(f'push server response {i.sucess}')

@@ -65,14 +65,13 @@ class CreateUserSerializer(UserCreateSerializer):
 
     def create(self, validated_data):
         used_invite = None
-        logger.info(f'validated_data: {validated_data}')
         if self.invintation_code:
             used_invite = Invintation.objects.filter(value=self.invintation_code, used_by=None).first()
             if used_invite is None:
                 logger.info('Пригласительный купон не найден')
                 raise ValueError('Пригласительный купон не найден')
         user = super().create({**validated_data, 'used_invintation': used_invite})
-        logger.info(f'User created')
+        logger.info(f'User {user.username}({user.id}) created')
 
         if used_invite:
             used_invite.used_by = user
