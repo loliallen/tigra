@@ -109,8 +109,8 @@ class AccountTest(TestCase):
             'phone': user.phone
         })
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(send_code_mock.call_args.args[0], user.phone)
-        code = send_code_mock.call_args.args[1]
+        self.assertEqual(send_code_mock.call_args[0][0], user.phone)
+        code = send_code_mock.call_args[0][1]
 
         response = self.client.get('/account/confirm/', data={
             'id': data['id'],
