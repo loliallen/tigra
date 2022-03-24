@@ -6,9 +6,8 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-import server.firebase as fcm
 from account.models import User, TmpHash
-from account.serializer import CreateUserSerializer, VisitSerializer, GetUserSerializer
+from account.serializer import VisitSerializer, GetUserSerializer
 from .models import Visit
 from .serializer import CustomVisitSerializer
 from .visits_logic import set_visit_if_free
@@ -17,24 +16,17 @@ TITLE = "Some notification title"
 MSG = "Some msg body lol kek lorem impus"
 
 
-def dateNowSec():
-    return time()
-
 class VisitListView(APIView):
     permission_classes=[IsAuthenticated, IsAdminUser]
-    """
-        Check user info
-    """
+
     def get(self, request):
-        userId = request.user.id
-        visits = Visit.objects.filter(staff=userId)
+        visits = Visit.objects.filter(staff=request.user)
         data = CustomVisitSerializer(visits, many=True)
         return Response(data.data)
 
     def post(self, request):
         data = request.data
         hashStr = data.get('hash')
-
         try:
             tmpHash = TmpHash.objects.get(hash=hashStr)
         except ObjectDoesNotExist:
@@ -74,52 +66,9 @@ class VisitsView(APIView):
         Get visit qr-code
     """
     def get(self, request):
-        userId = request.user.id
-        userModel = User.objects.get(pk=userId)
-        ts = int(time())
-        hash_object = hashlib.sha512((str(userId) + str(ts)).encode())
-        hash_str = hash_object.hexdigest()
-        tmpHash = None
-
         tmpHash = TmpHash(
-            user=userModel,
-            hash=hash_str
+            user=request.user,
+            hash=hashlib.sha512((str(request.user.id) + str(int(time()))).encode()).hexdigest()
         )
         tmpHash.save()
-
-        # img = qrcode.make(hash_str)
-        # response = Response(
-        #     content_type="image/png",
-        # )
-        # img.save(response, "PNG")
-
-        return Response({'hash': hash_str})
-
-    def post(self, request):
-        userId = request.user.id
-        user = None
-        try:
-            user = User.objects.get(pk=userId, is_staff=True)
-        except:
-            return Response({'message', 'Staff user not found'}, status=404)
-
-        data = request.data
-        forRemove = data.get('forRemove')
-        ok = []
-        for i in forRemove:
-            try:
-                visit = Visit.objects.get(pk=i)
-                visit.active = False
-                visit.save()
-                ok.append(str(i))
-            except:
-                pass
-        return Response({'ok', ', '.join(ok)})
-
-class NotitficationView(APIView):
-    def post(self, request):
-        data = request.data
-
-        fcm.sendPush(data.get('title'), data.get('msg'), data.get('tokens'), data.get('data'))
-
-        return Response({'message': 'Cloud Message sent...'})
+        return Response({'hash': tmpHash.hash})

@@ -1,7 +1,10 @@
+import logging
 import os
 
 import requests
 from requests.auth import HTTPBasicAuth
+
+logger = logging.getLogger(__name__)
 
 SMS_AERO_API_KEY = os.environ.get("SMS_AERO_API_KEY")
 SMS_AERO_USERNAME = os.environ.get("SMS_AERO_USERNAME")
@@ -14,15 +17,20 @@ def sendCode(phone, code):
 
 
 def _send_code(phone, code):
-    print('sendCode called')
     custom_params = {
         "number": phone,
         "text":"Your one time code is: {}".format(code),
-        "sign":"SMS Aero"
+        "sign": "SMS Aero"
     }
+    logger.info(f"send code {code} to {phone}")
     res = requests.get(
         url = SMS_AERO_URL,
         params=custom_params,
         auth=HTTPBasicAuth(SMS_AERO_USERNAME,SMS_AERO_API_KEY)
-    ) #same as Http Basic auth
-    print(res.status_code)
+    )
+    body = None
+    try:
+        body = res.json()
+    except:
+        pass
+    logger.info(f"code sended ({code} to {phone}), response status:{res.status_code}, body:{body}")
