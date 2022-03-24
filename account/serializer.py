@@ -1,6 +1,5 @@
 import logging
 
-from django.contrib.auth.hashers import make_password
 from djoser.conf import settings as djoser_settings
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
@@ -66,23 +65,22 @@ class CreateUserSerializer(UserCreateSerializer):
 
     def create(self, validated_data):
         used_invite = None
-
-        logger.info(f'validated_data: {validated_data}')
         if self.invintation_code:
             used_invite = Invintation.objects.filter(value=self.invintation_code, used_by=None).first()
             if used_invite is None:
                 logger.info('Пригласительный купон не найден')
                 raise ValueError('Пригласительный купон не найден')
-
-        password = make_password(validated_data.pop('password'))
-        user = User.objects.create(
-            **validated_data,
-            password=password,
-            used_invintation=used_invite
-        )
-        logger.info(f'User created')
+        user = super().create({**validated_data, 'used_invintation': used_invite})
+        logger.info(f'User {user.username}({user.id}) created')
 
         if used_invite:
             used_invite.used_by = user
             used_invite.save()
         return user
+
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email')

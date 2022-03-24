@@ -13,6 +13,8 @@ django-templated-mail==1.1.1
 djangorestframework==3.12.4
 djangorestframework-simplejwt==4.6.0
 djoser==2.1.0
+factory-boy==3.2.1
+Faker==11.3.0
 firebase-admin==4.5.3
 google-api-core==1.26.3
 google-api-python-client==2.1.0
