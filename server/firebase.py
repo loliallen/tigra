@@ -10,8 +10,11 @@ from firebase_admin import credentials, messaging
 logger = logging.getLogger(__name__)
 
 cred_abs_path = os.environ.get('FIREBASE_CRED', "creds.json")
-cred = credentials.Certificate(cred_abs_path)
-app = firebase_admin.initialize_app(cred)
+if not os.path.exists(cred_abs_path):
+    logger.warning('creds for firebase isn\'t exists')
+else:
+    cred = credentials.Certificate(cred_abs_path)
+    app = firebase_admin.initialize_app(cred)
 
 
 def sendPush(title, msg, registration_tokens, dataObject = None):
