@@ -197,7 +197,7 @@ class InvintationsAdmin(admin.ModelAdmin):
     fields = ("value", "creator_", "used_by_", "used_", "visited_", "is_used_by_creator")
 
     list_display = ("value", "creator_", "used_by_", "used_", "visited_", "is_used_by_creator")
-    list_filter = ("creator", "used_by", "is_used_by_creator")
+    list_filter = ("is_used_by_creator",)
 
     def creator_(self, obj):
         return model_admin_url(obj.creator)
@@ -216,7 +216,6 @@ class InvintationsAdmin(admin.ModelAdmin):
 
 class NotifyAdmin(admin.ModelAdmin):
     list_display = ("title", "body")
-    list_filter = ("title", "body")
 
 
 admin.site.register(User, CustomUserAdmin)
