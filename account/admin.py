@@ -1,13 +1,22 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.auth.admin import UserAdmin
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.db import models
+from django.shortcuts import resolve_url
+from django.utils.html import format_html
+from django.utils.safestring import SafeText
 
 from mobile.models import Visit
 from mobile.visits_logic import set_visit_if_free
 from .models import User, Child, Invintation, Notification
+
+
+def model_admin_url(obj, name: str = None) -> str:
+    url = resolve_url(admin_urlname(obj._meta, SafeText("change")), obj.pk)
+    return format_html('<a href="{}">{}</a>', url, name or str(obj))
 
 
 class UserCreationForm(forms.ModelForm):
@@ -45,8 +54,11 @@ class VisitAdminInline(admin.TabularInline):
     template = 'admin/edit_inline/tabular_paginated.html'
     per_page = 5
 
-    readonly_fields = ("end", "is_free", "is_active", "free_reason", "staff")
-    fields = ("date", "duration", "end", "is_free", "free_reason", "staff")
+    readonly_fields = ("end", "is_free", "is_active", "free_reason", "staff_")
+    fields = ("date", "duration", "end", "is_free", "free_reason", "staff_")
+
+    def staff_(self, obj):
+        return model_admin_url(obj.staff)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super().get_formset(
@@ -113,8 +125,19 @@ class InvintationAdminInline(admin.TabularInline):
     can_delete = False
     fk_name = "creator"
 
-    readonly_fields = ("value", "used", "visited", "is_used_by_creator")
-    fields = ("value", "used", "visited", "is_used_by_creator")
+    readonly_fields = ("value", "used_", "visited_", "used_by_", "is_used_by_creator")
+    fields = ("value", "used_", "visited_", "used_by_", "is_used_by_creator")
+
+    def used_by_(self, obj):
+        return model_admin_url(obj.used_by)
+
+    def used_(self, obj):
+        return obj.used
+    used_.boolean = True
+
+    def visited_(self, obj):
+        return obj.visited
+    visited_.boolean = True
 
 
 class CustomUserAdmin(UserAdmin):
