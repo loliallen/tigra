@@ -15,6 +15,8 @@ from .models import User, Child, Invintation, Notification
 
 
 def model_admin_url(obj, name: str = None) -> str:
+    if obj is None:
+        return "-"
     url = resolve_url(admin_urlname(obj._meta, SafeText("change")), obj.pk)
     return format_html('<a href="{}">{}</a>', url, name or str(obj))
 
