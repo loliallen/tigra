@@ -40,7 +40,7 @@ class VisitAdminInline(admin.TabularInline):
     model = Visit
     fk_name = 'user'
     extra = 0
-    can_delete = True
+    can_delete = False
     ordering = ('date',)
     template = 'admin/edit_inline/tabular_paginated.html'
     per_page = 5

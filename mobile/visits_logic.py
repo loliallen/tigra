@@ -29,7 +29,8 @@ def get_visits_to_count(user):
 def count_to_free_visit(user) -> Tuple[int, FreeReason]:
     if check_not_used_invite(user):
         return 0, FreeReason.INVITE
-    return VISITS_TO_FREE - get_visits_to_count(user).count(), FreeReason.COUNT
+    cnt = VISITS_TO_FREE - get_visits_to_count(user).count()
+    return cnt if cnt >= 0 else 0, FreeReason.COUNT
 
 
 def set_visit_if_free(visit_obj: Visit):
