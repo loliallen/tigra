@@ -44,7 +44,7 @@ def set_visit_if_free(visit_obj: Visit):
 
     # проверка на бесплатный визит по количеству платных посещений
     visits_to_count = get_visits_to_count(user).count()
-    if VISITS_TO_FREE - visits_to_count == 0:
+    if VISITS_TO_FREE - visits_to_count <= 0:
         visit_obj.is_free = True
         visit_obj.free_reason = FreeReason.COUNT
         visit_obj.is_active = False  # костыль для отображения на фронте как бесплатного пятого посещения
