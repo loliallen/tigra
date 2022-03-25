@@ -1,50 +1,14 @@
 from django import forms
 from django.contrib import admin
-from django.contrib.admin.templatetags.admin_urls import admin_urlname
-from django.contrib.admin.views.main import ChangeList
 from django.contrib.auth.admin import UserAdmin
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.db import models
-from django.shortcuts import resolve_url
-from django.utils.html import format_html
-from django.utils.safestring import SafeText
+from django.db.models import Count
 
 from mobile.models import Visit
 from mobile.visits_logic import set_visit_if_free
+from .admin_tools import model_admin_url, InlineChangeList
 from .models import User, Child, Invintation, Notification
-
-
-def model_admin_url(obj, name: str = None) -> str:
-    if obj is None:
-        return "-"
-    url = resolve_url(admin_urlname(obj._meta, SafeText("change")), obj.pk)
-    return format_html('<a href="{}">{}</a>', url, name or str(obj))
-
-
-class UserCreationForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ('__all__')
-
-    def save(self, commit=True):
-        # Save the provided password in hashed format
-        user = super(UserCreationForm, self).save(commit=False)
-        user.set_pasword(self.cleaned_data["password"])
-        if commit:
-            user.save()
-        return user
-
-class InlineChangeList(object):
-    can_show_all = True
-    multi_page = True
-    get_query_string = ChangeList.__dict__['get_query_string']
-
-    def __init__(self, request, page_num, paginator):
-        self.show_all = 'all' in request.GET
-        self.page_num = page_num
-        self.paginator = paginator
-        self.result_count = paginator.count
-        self.params = dict(request.GET.items())
 
 
 class VisitAdminInline(admin.TabularInline):
@@ -142,17 +106,43 @@ class InvintationAdminInline(admin.TabularInline):
     visited_.boolean = True
 
 
+class UsersFilter(admin.SimpleListFilter):
+    title = 'Кол-во посещений'
+    parameter_name = 'decade'
+
+    def lookups(self, request, model_admin):
+        return tuple(
+            (f'{i}+', f'{i}+') for i in [1, 3, 5, 10, 15, 20, 30, 50]
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        return queryset.annotate(visits_cnt=Count('visits_user')).filter(
+            visits_cnt__gte=int(self.value()[:-1]),
+        )
+
+
 class CustomUserAdmin(UserAdmin):
     model = User
     inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
 
     readonly_fields = ('date_joined', 'last_login', 'used_invintation', 'phone_code',
             'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
-    list_display = ("fio", "phone", "email", "date_joined")
+    list_display = ("fio", "phone", "email", "date_joined", "visits_count")
+    list_filter = ("phone_confirmed", "date_joined", "last_login", UsersFilter)
 
     formfield_overrides = {
         models.TextField: {'widget': forms.TextInput},
     }
+
+    def visits_count(self, obj):
+        return obj.visits_count
+    visits_count.admin_order_field = 'visits_count'
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.annotate(visits_count=Count('visits_user'))
 
     def fio(self, obj):
         return f"{obj.first_name} {obj.last_name}"
