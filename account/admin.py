@@ -190,7 +190,34 @@ class CustomUserAdmin(UserAdmin):
         formset.save()
 
 
+class InvintationsAdmin(admin.ModelAdmin):
+    readonly_fields = ("value", "creator_", "used_by_", "used_", "visited_", "is_used_by_creator")
+    fields = ("value", "creator_", "used_by_", "used_", "visited_", "is_used_by_creator")
+
+    list_display = ("value", "creator_", "used_by_", "used_", "visited_", "is_used_by_creator")
+    list_filter = ("creator", "used_by", "is_used_by_creator")
+
+    def creator_(self, obj):
+        return model_admin_url(obj.creator)
+
+    def used_by_(self, obj):
+        return model_admin_url(obj.used_by)
+
+    def used_(self, obj):
+        return obj.used
+    used_.boolean = True
+
+    def visited_(self, obj):
+        return obj.visited
+    visited_.boolean = True
+
+
+class NotifyAdmin(admin.ModelAdmin):
+    list_display = ("title", "body")
+    list_filter = ("title", "body")
+
+
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(Notification)
+admin.site.register(Notification, NotifyAdmin)
 admin.site.register(Child)
-admin.site.register(Invintation)
+admin.site.register(Invintation, InvintationsAdmin)

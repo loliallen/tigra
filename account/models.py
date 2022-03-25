@@ -86,6 +86,10 @@ class User(AbstractUser):
         return cnt_to_free_visit_logic(self)[1]
 
 
+    def __str__(self):
+        return f"{self.last_name} {self.first_name} ({self.phone})"
+
+
 class TmpHash(models.Model):
     hash = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
