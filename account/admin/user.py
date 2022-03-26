@@ -7,8 +7,22 @@ from django.db.models import Count
 
 from mobile.models import Visit
 from mobile.visits_logic import set_visit_if_free
-from .admin_tools import model_admin_url, InlineChangeList
-from .models import User, Child, Invintation, Notification
+from account.admin.tools import model_admin_url, InlineChangeList
+from account.models import User, Child, Invintation
+
+
+class UserCreationForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('__all__')
+
+    def save(self, commit=True):
+        # Save the provided password in hashed format
+        user = super(UserCreationForm, self).save(commit=False)
+        user.set_pasword(self.cleaned_data["password"])
+        if commit:
+            user.save()
+        return user
 
 
 class VisitAdminInline(admin.TabularInline):
@@ -20,8 +34,8 @@ class VisitAdminInline(admin.TabularInline):
     template = 'admin/edit_inline/tabular_paginated.html'
     per_page = 5
 
-    readonly_fields = ("end", "is_free", "is_active", "free_reason", "staff_")
-    fields = ("date", "duration", "end", "is_free", "free_reason", "staff_")
+    readonly_fields = ("is_free", "is_active", "free_reason", "staff_")
+    fields = ("date", "duration", "is_free", "free_reason", "staff_")
 
     def staff_(self, obj):
         return model_admin_url(obj.staff)
@@ -127,8 +141,8 @@ class CustomUserAdmin(UserAdmin):
     model = User
     inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
 
-    readonly_fields = ('date_joined', 'last_login', 'used_invintation', 'phone_code',
-            'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
+    readonly_fields = ('date_joined', 'last_login', 'used_invintation_', 'phone_code',
+                       'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
     list_display = ("fio", "phone", "email", "date_joined", "visits_count")
     list_filter = ("phone_confirmed", "date_joined", "last_login", UsersFilter)
 
@@ -147,18 +161,20 @@ class CustomUserAdmin(UserAdmin):
     def fio(self, obj):
         return f"{obj.first_name} {obj.last_name}"
 
+    def used_invintation_(self, obj):
+        return model_admin_url(obj.used_invintation)
+
     fieldsets = (
-        (None, { 'fields' : (
+        (None, {'fields' : (
             'username',
             'password',
         )}),
-        ("Confirmation", { 'fields' : (
+        ("Подтверждение", { 'fields' : (
             'phone_code',
             'phone_confirmed',
-            'device_token',
-            'used_invintation',
+            'used_invintation_',
         )}),
-        ("Personal Info", { 'fields' : (
+        ("Персональная информация", { 'fields' : (
             'email',
             'first_name',
             'last_name',
@@ -166,11 +182,11 @@ class CustomUserAdmin(UserAdmin):
             'count_to_free_visit',
             'free_reason',
         )}),
-        ("Permissions", { 'fields' : (
+        ("Доступы", { 'fields' : (
             'is_staff',
             'is_superuser',
         )}),
-        ("important Dates", { 'fields' : (
+        ("Важные даты", { 'fields' : (
             'date_joined',
             'last_login',
         )}),
@@ -180,35 +196,3 @@ class CustomUserAdmin(UserAdmin):
         if getattr(formset, 'save_before', None):
             formset.save_before(request, form, formset, change)
         formset.save()
-
-
-class InvintationsAdmin(admin.ModelAdmin):
-    readonly_fields = ("value", "creator_", "used_by_", "used_", "visited_", "is_used_by_creator")
-    fields = ("value", "creator_", "used_by_", "used_", "visited_", "is_used_by_creator")
-
-    list_display = ("value", "creator_", "used_by_", "used_", "visited_", "is_used_by_creator")
-    list_filter = ("is_used_by_creator",)
-
-    def creator_(self, obj):
-        return model_admin_url(obj.creator)
-
-    def used_by_(self, obj):
-        return model_admin_url(obj.used_by)
-
-    def used_(self, obj):
-        return obj.used
-    used_.boolean = True
-
-    def visited_(self, obj):
-        return obj.visited
-    visited_.boolean = True
-
-
-class NotifyAdmin(admin.ModelAdmin):
-    list_display = ("title", "body")
-
-
-admin.site.register(User, CustomUserAdmin)
-admin.site.register(Notification, NotifyAdmin)
-admin.site.register(Child)
-admin.site.register(Invintation, InvintationsAdmin)

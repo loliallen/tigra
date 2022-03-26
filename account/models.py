@@ -1,3 +1,4 @@
+import datetime
 import logging
 import random
 from string import digits, ascii_uppercase
@@ -31,6 +32,7 @@ class Child(models.Model):
     name = models.TextField()
     age = models.IntegerField()
     sex = models.TextField(choices=SEX_CHOICES)
+    birth_date = models.DateField(null=True)
     my_parent = models.ForeignKey(
         to='account.User',
         related_name='children',
@@ -43,18 +45,23 @@ class Child(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name_plural = "Дети"
+        verbose_name = "ребенок"
+
 class User(AbstractUser):
     phone = models.CharField(max_length=12, unique=True)
     username = models.TextField(default="username", blank=False)
-    phone_code = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6)
-    phone_confirmed = models.BooleanField(default=False, blank=True)
-    device_token = models.TextField(default="")
+    phone_code = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6, verbose_name='проверочный код телефона')
+    phone_confirmed = models.BooleanField(default=False, blank=True, verbose_name='телефон подтвержден')
+    device_token = models.TextField(default="", verbose_name="токен устройства для отправки пушей")
     used_invintation = models.ForeignKey(
         to='account.Invintation',
         on_delete=models.CASCADE,
         blank=True,
         default=None,
-        null=True
+        null=True,
+        verbose_name="использованный код приглашения",
     )
 
     USERNAME_FIELD = "phone"
@@ -94,11 +101,13 @@ class TmpHash(models.Model):
     hash = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+
 class ApplicationToReset(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     field = models.CharField(max_length=60)
     code = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
     user_code = models.CharField(default=createCode, blank=True, unique=True, max_length=6)
+
 
 class Invintation(models.Model):
     value = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6, verbose_name='код')
@@ -131,15 +140,25 @@ class Invintation(models.Model):
     def __str__(self):
         return f"{self.value} ({self.creator.username})"
 
+    class Meta:
+        verbose_name_plural = "Пригласительные купоны"
+        verbose_name = "пригласительный купон"
+
+
 class Notification(models.Model):
     title = models.TextField()
     body = models.TextField()
+    date_creation = models.DateTimeField(default=datetime.datetime.utcnow)
     to_users = models.ManyToManyField(
         to=User,
         related_name="notifications",
         default=[],
         blank=True
     )
+
+    class Meta:
+        verbose_name_plural = "Уведомления"
+        verbose_name = "уведомление"
 
 # callbacks
 
