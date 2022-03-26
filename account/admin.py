@@ -108,7 +108,7 @@ class InvintationAdminInline(admin.TabularInline):
 
 class UsersFilter(admin.SimpleListFilter):
     title = 'Кол-во посещений'
-    parameter_name = 'decade'
+    parameter_name = 'visit_count'
 
     def lookups(self, request, model_admin):
         return tuple(
@@ -118,8 +118,8 @@ class UsersFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value() is None:
             return queryset
-        return queryset.annotate(visits_cnt=Count('visits_user')).filter(
-            visits_cnt__gte=int(self.value()[:-1]),
+        return queryset.filter(
+            visits_count__gte=int(self.value()[:-1]),
         )
 
 
