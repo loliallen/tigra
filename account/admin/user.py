@@ -144,7 +144,7 @@ class CustomUserAdmin(UserAdmin):
     readonly_fields = ('date_joined', 'last_login', 'used_invintation_', 'phone_code',
                        'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
     list_display = ("fio", "phone", "email", "date_joined", "visits_count")
-    list_filter = ("phone_confirmed", "date_joined", "last_login", UsersFilter)
+    list_filter = ("phone_confirmed", "date_joined", "last_login", "is_staff", UsersFilter)
 
     formfield_overrides = {
         models.TextField: {'widget': forms.TextInput},
