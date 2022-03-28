@@ -32,7 +32,7 @@ class Child(models.Model):
     name = models.TextField()
     age = models.IntegerField()
     sex = models.TextField(choices=SEX_CHOICES)
-    birth_date = models.DateField(null=True)
+    birth_date = models.DateField(null=True, blank=True)
     my_parent = models.ForeignKey(
         to='account.User',
         related_name='children',
