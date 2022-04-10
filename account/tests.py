@@ -176,6 +176,29 @@ class AccountTest(TestCase):
         resp_data = response.json()
         self.assertEqual(len(resp_data["children"]), 0)
 
+    @patch('account.controller._send_code')
+    def test_reset_password(self, send_code_mock):
+        client, user = get_auth_client(self)
+        response = client.post('/account/reset_password/', {
+            'phone': user.phone,
+        })
+        self.assertEqual(response.status_code, 200)
+        user_code = response.json()['code']
+        self.assertEqual(send_code_mock.call_args[0][0], user.phone)
+        code = send_code_mock.call_args[0][1]
+        new_password = 'New@Password1!'
+        response = client.put('/account/reset_password/', {
+            'user_code': user_code,
+            'code': code,
+            'password': new_password
+        })
+        self.assertEqual(response.status_code, 200)
+        response = client.post('/account/token/login', data={
+            'phone': user.phone,
+            'password': new_password,
+        })
+        self.assertEqual(response.status_code, 200)
+
 
 class InviteTest(TestCase):
 

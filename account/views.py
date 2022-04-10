@@ -94,7 +94,7 @@ class ResetPasswordView(APIView):
 
     def post(self, request):
         phone = request.data['phone']
-        user = User.objects.filter(phone=phone).fitst()
+        user = User.objects.filter(phone=phone).first()
         if user is None:
             return Response({'message': 'User with phone {} not found'.format(phone)}, status=400)
         atr = ApplicationToReset(
