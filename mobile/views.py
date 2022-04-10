@@ -12,9 +12,6 @@ from .models import Visit
 from .serializer import CustomVisitSerializer
 from .visits_logic import set_visit_if_free
 
-TITLE = "Some notification title"
-MSG = "Some msg body lol kek lorem impus"
-
 
 class VisitListView(APIView):
     permission_classes=[IsAuthenticated, IsAdminUser]
@@ -31,10 +28,11 @@ class VisitListView(APIView):
             tmpHash = TmpHash.objects.get(hash=hashStr)
         except ObjectDoesNotExist:
             return Response({'message', 'Hash Does Not Exist'}, status=403)
+        if not tmpHash.check_lifetime():
+            return Response({'message', 'Hash is expired'}, status=403)
         user = tmpHash.user
         tmpHash.delete()
         responseData = GetUserSerializer(user)
-
         return Response(responseData.data)
 
     def put(self, request):
@@ -66,9 +64,14 @@ class VisitsView(APIView):
         Get visit qr-code
     """
     def get(self, request):
-        tmpHash = TmpHash(
-            user=request.user,
-            hash=hashlib.sha512((str(request.user.id) + str(int(time()))).encode()).hexdigest()
-        )
-        tmpHash.save()
+        tmpHash = TmpHash.objects.filter(user=request.user).first()
+        if tmpHash and not tmpHash.check_lifetime():
+            tmpHash.delete()
+            tmpHash = None
+        if tmpHash is None:
+            tmpHash = TmpHash(
+                user=request.user,
+                hash=hashlib.sha512((str(request.user.id) + str(int(time()))).encode()).hexdigest()
+            )
+            tmpHash.save()
         return Response({'hash': tmpHash.hash})

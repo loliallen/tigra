@@ -1,4 +1,5 @@
 from django.test import TestCase
+from freezegun import freeze_time
 from rest_framework.test import APIClient
 
 from account.test_factories import InvintationFactory, VisitFactory
@@ -11,6 +12,20 @@ class VisitTest(TestCase):
 
     def setUp(self):
         self.client = APIClient()
+
+    def test_hash_generation(self):
+        # проверяем что hash (qr код) визита живет не больше 10 минут, а далее создается новый
+        client_user, user = get_auth_client(self)
+        with freeze_time("2020-01-01 12:00:00"):
+            response = client_user.get('/mobile/visits/')
+        hash_ = response.json()['hash']
+        with freeze_time("2020-01-01 12:09:59"):
+            response = client_user.get('/mobile/visits/')
+        self.assertEqual(hash_, response.json()['hash'])
+        with freeze_time("2020-01-01 12:10:00"):
+            response = client_user.get('/mobile/visits/')
+        self.assertNotEqual(hash_, response.json()['hash'])
+        self.assertEqual(user.tmphash_set.count(), 1)
 
     def test_create_simple_paid_visit(self):
         client_user, user = get_auth_client(self)

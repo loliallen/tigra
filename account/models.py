@@ -9,7 +9,7 @@ from django.db import models
 from django.db.models import signals
 
 import server.firebase as fcm
-from mobile.models import Visit, FreeReason
+from mobile.models import Visit, FreeReason, now
 from mobile.visits_logic import count_to_free_visit as cnt_to_free_visit_logic
 
 logger = logging.getLogger(__name__)
@@ -98,8 +98,14 @@ class User(AbstractUser):
 
 
 class TmpHash(models.Model):
+    LIFETIME = 600  # 10 минут
+
     hash = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=now)
+
+    def check_lifetime(self):
+        return self.created_at > now().astimezone(datetime.timezone.utc) - datetime.timedelta(seconds=TmpHash.LIFETIME)
 
 
 class ApplicationToReset(models.Model):
