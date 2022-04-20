@@ -121,20 +121,37 @@ class InvintationAdminInline(admin.TabularInline):
     visited_.boolean = True
 
 
-class UsersFilter(admin.SimpleListFilter):
-    title = 'Кол-во посещений'
+class VisitsCountGreaterFilter(admin.SimpleListFilter):
+    title = 'Кол-во посещений больше'
     parameter_name = 'visit_count'
 
     def lookups(self, request, model_admin):
         return tuple(
-            (f'{i}+', f'{i}+') for i in [1, 3, 5, 10, 15, 20, 30, 50]
+            (f'>={i}', f'>={i}') for i in [1, 2, 3, 5, 10, 15, 20, 30, 50]
         )
 
     def queryset(self, request, queryset):
         if self.value() is None:
             return queryset
         return queryset.filter(
-            visits_count__gte=int(self.value()[:-1]),
+            visits_count__gte=int(self.value()[2:]),
+        )
+
+
+class VisitsCountLowerFilter(admin.SimpleListFilter):
+    title = 'Кол-во посещений меньше'
+    parameter_name = 'visit_count_lower'
+
+    def lookups(self, request, model_admin):
+        return tuple(
+            (f'<={i}', f'<={i}') for i in [1, 2, 3, 5, 10, 15, 20, 30, 50]
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        return queryset.filter(
+            visits_count__lte=int(self.value()[2:]),
         )
 
 
@@ -151,7 +168,7 @@ class CustomUserAdmin(UserAdmin):
     readonly_fields = ('date_joined', 'last_login', 'used_invintation_', 'phone_code',
                        'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
     list_display = ("fio", "phone", "email", "date_joined", "visits_count")
-    list_filter = ("phone_confirmed", "date_joined", "last_login", "is_staff", UsersFilter)
+    list_filter = ("phone_confirmed", "date_joined", "last_login", "is_staff", VisitsCountGreaterFilter, VisitsCountLowerFilter)
     actions = [export_selected_objects]
 
     formfield_overrides = {
