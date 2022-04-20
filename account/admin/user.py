@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.db import models
 from django.db.models import Count
+from django.http import HttpResponseRedirect
 
 from mobile.models import Visit
 from mobile.visits_logic import set_visit_if_free
@@ -137,6 +138,12 @@ class UsersFilter(admin.SimpleListFilter):
         )
 
 
+def export_selected_objects(modeladmin, request, queryset):
+    selected = queryset.values_list('pk', flat=True)
+    return HttpResponseRedirect(f'/admin/account/notification/add/?to_users={",".join(str(i) for i in selected)}')
+export_selected_objects.short_description = "Отправить пуш уведомления"
+
+
 class CustomUserAdmin(UserAdmin):
     model = User
     inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
@@ -145,6 +152,7 @@ class CustomUserAdmin(UserAdmin):
                        'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
     list_display = ("fio", "phone", "email", "date_joined", "visits_count")
     list_filter = ("phone_confirmed", "date_joined", "last_login", "is_staff", UsersFilter)
+    actions = [export_selected_objects]
 
     formfield_overrides = {
         models.TextField: {'widget': forms.TextInput},
