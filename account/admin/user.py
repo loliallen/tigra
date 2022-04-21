@@ -144,7 +144,7 @@ class VisitsCountLowerFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return tuple(
-            (f'<={i}', f'<={i}') for i in [1, 2, 3, 5, 10, 15, 20, 30, 50]
+            (f'<={i}', f'<={i}') for i in [0, 1, 2, 3, 5, 10, 15, 20, 30, 50]
         )
 
     def queryset(self, request, queryset):
