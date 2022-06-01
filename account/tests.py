@@ -1,11 +1,11 @@
 import json
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from django.test import TestCase
 from rest_framework.test import APIClient
 
 from account.models import User
-from account.test_factories import InvintationFactory, VisitFactory
+from account.test_factories import InvintationFactory, VisitFactory, SchedulerNotifyFactory
 from account.test_utils import get_auth_client
 
 
@@ -236,3 +236,22 @@ class InviteTest(TestCase):
         self.assertEqual(resp_data['visited'], False)
         self.assertEqual(resp_data['creator'], user.id)
 
+
+class TestScheduledNotify(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    @patch('account.tasks.send_push.apply_async')
+    def test_notify(self, send_push_mock: MagicMock):
+        scheduled_notify = SchedulerNotifyFactory(trigger='start', minute_offset=2)
+
+        client, user = get_auth_client(self)
+        client_admin, admin_user = get_auth_client(self, is_admin=True)
+
+        response = client_admin.put('/mobile/visits/add/',
+                                    data={'user_id': user.id, 'duration': 3600})
+        self.assertEqual(response.status_code, 201)
+        send_push_mock.assert_called_with(
+            args=([user.id], scheduled_notify.title, scheduled_notify.body),
+            countdown=120
+        )
