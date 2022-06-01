@@ -30,6 +30,7 @@ services:
     environment:
      DB_HOST: "db"
      DEBUG: "False"
+     CELERY_RABBIT_ADDRESS: "amqp://rabbitmq:rabbitmq@rabbitmq//"
     depends_on:
      - db
   rabbitmq:
