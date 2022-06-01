@@ -190,12 +190,15 @@ class SchedulerNotify(models.Model):
     def send_push_for_visit(cls, visit: Visit):
         # TODO: cover it by tests
         for scheduled_notify in SchedulerNotify.objects.all():
+            logger.info(f'{scheduled_notify}')
             if scheduled_notify.trigger == TriggerEnum.ON_START:
+                logger.info(f'send task for push on start for push [{visit.user.id}]')
                 tasks.send_push.apply_async(
                     args=([visit.user.id], scheduled_notify.title, scheduled_notify.body),
                     countdown=scheduled_notify.minute_offset*60
                 )
             if scheduled_notify.trigger == TriggerEnum.ON_END:
+                logger.info(f'send task for push on start for push [{visit.user.id}]')
                 tasks.send_push.apply_async(
                     args=([visit.user.id], scheduled_notify.title, scheduled_notify.body),
                     countdown=scheduled_notify.minute_offset * 60 + visit.duration
