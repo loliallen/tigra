@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from account.models import User, TmpHash
+from account.models import User, TmpHash, SchedulerNotify
 from account.serializer import VisitSerializer, GetUserSerializer
 from .models import Visit
 from .serializer import CustomVisitSerializer
@@ -53,6 +53,7 @@ class VisitListView(APIView):
         )
         set_visit_if_free(visit_obj)
         visit_obj.save()
+        SchedulerNotify.send_push_for_visit(visit_obj)
         responseData = VisitSerializer(visit_obj)
         return Response(responseData.data, status=201)
 

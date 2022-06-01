@@ -1,4 +1,5 @@
 import datetime
+import enum
 import logging
 import random
 from string import digits, ascii_uppercase
@@ -11,6 +12,7 @@ from django.db.models import signals
 import server.firebase as fcm
 from mobile.models import Visit, FreeReason, now
 from mobile.visits_logic import count_to_free_visit as cnt_to_free_visit_logic
+from account import tasks
 
 logger = logging.getLogger(__name__)
 
@@ -161,10 +163,43 @@ class Notification(models.Model):
         default=[],
         blank=True
     )
+    scheduler = models.ForeignKey('SchedulerNotify', null=True, blank=True, on_delete=models.PROTECT)
 
     class Meta:
         verbose_name_plural = "Уведомления"
         verbose_name = "уведомление"
+
+class TriggerEnum(enum.Enum):
+    ON_START = 'start'
+    ON_END = 'end'
+
+
+SCHEDULER_NOTIFY_CHOICES = (
+    ('start', 'on_visit_start'),
+    ('end', 'on_visit_end'),
+)
+
+
+class SchedulerNotify(models.Model):
+    trigger = models.TextField(choices=SCHEDULER_NOTIFY_CHOICES, null=False, blank=False)
+    minute_offset = models.IntegerField(default=0)
+    title = models.TextField(null=False, blank=False, default='-')
+    body = models.TextField(null=False, blank=False, default='-')
+
+    @classmethod
+    def send_push_for_visit(cls, visit: Visit):
+        # TODO: cover it by tests
+        for scheduled_notify in SchedulerNotify.objects.all():
+            if scheduled_notify.trigger == TriggerEnum.ON_START:
+                tasks.send_push.apply_async(
+                    args=([visit.user.id], scheduled_notify.title, scheduled_notify.body),
+                    countdown=scheduled_notify.minute_offset*60
+                )
+            if scheduled_notify.trigger == TriggerEnum.ON_END:
+                tasks.send_push.apply_async(
+                    args=([visit.user.id], scheduled_notify.title, scheduled_notify.body),
+                    countdown=scheduled_notify.minute_offset * 60 + visit.duration
+                )
 
 # callbacks
 
