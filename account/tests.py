@@ -278,3 +278,15 @@ class TestScheduledNotify(TestCase):
         ConditionNotifyFactory(variable='visit.is_free', value=True, scheduled_notify=scheduled_notify)
         SchedulerNotify.send_push_for_visit(VisitFactory(is_free=False))
         self.assertFalse(send_push_mock.called)
+
+    @patch('account.tasks.send_push.apply_async')
+    def test_queries_count(self, send_push_mock: MagicMock):
+        scheduled_notify_1 = SchedulerNotifyFactory(trigger='start')
+        scheduled_notify_2 = SchedulerNotifyFactory(trigger='end')
+        ConditionNotifyFactory(variable='visit.is_free', value=True,
+                               scheduled_notify=scheduled_notify_1)
+        ConditionNotifyFactory(variable='visit.is_free', value=True,
+                               scheduled_notify=scheduled_notify_2)
+        visit = VisitFactory(is_free=False)
+        with self.assertNumQueries(2):
+            SchedulerNotify.send_push_for_visit(visit)
