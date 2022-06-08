@@ -169,6 +169,41 @@ class Notification(models.Model):
         verbose_name_plural = "Уведомления"
         verbose_name = "уведомление"
 
+
+VARIABLE_CHOICES = (
+    ('visit.duration', 'visit duration'),
+    ('visit.is_free', 'visit is free'),
+)
+
+VARIABLE_TYPE_MAP = {
+    'visit.duration': int,
+    'visit.is_free': bool,
+}
+
+
+COMPARATOR_CHOICES = (
+    ('==', '=='),
+    ('>=', '>='),
+    ('<=', '<='),
+    ('>', '>'),
+    ('<', '<'),
+)
+
+
+class Condition(models.Model):
+    variable = models.TextField(choices=VARIABLE_CHOICES, null=False, blank=False)
+    comparator = models.TextField(choices=COMPARATOR_CHOICES, null=False, blank=False)
+    value = models.CharField(null=False, blank=False, max_length=100)
+    scheduled_notify = models.ForeignKey(to='account.SchedulerNotify',
+                                         related_name="conditions",
+                                         on_delete=models.PROTECT,
+                                         blank=False,
+                                         null=False)
+
+    def compare(self, visit):
+        return eval(f'{self.variable} {self.comparator} {self.value}')
+
+
 class TriggerEnum(enum.Enum):
     ON_START = 'start'
     ON_END = 'end'
@@ -186,16 +221,20 @@ class SchedulerNotify(models.Model):
     title = models.TextField(null=False, blank=False, default='-')
     body = models.TextField(null=False, blank=False, default='-')
 
+    def check_conditions(self, visit):
+        return all(condition.compare(visit) for condition in self.conditions.all())
+
     @classmethod
     def send_push_for_visit(cls, visit: Visit):
-        # TODO: cover it by tests
-        for scheduled_notify in SchedulerNotify.objects.all():
-            if scheduled_notify.trigger == TriggerEnum.ON_START.value:
+        for scheduled_notify in SchedulerNotify.objects.prefetch_related('conditions').all():
+            if scheduled_notify.trigger == TriggerEnum.ON_START.value \
+                    and scheduled_notify.check_conditions(visit):
                 tasks.send_push.apply_async(
                     args=([visit.user.id], scheduled_notify.title, scheduled_notify.body),
                     countdown=scheduled_notify.minute_offset*60
                 )
-            if scheduled_notify.trigger == TriggerEnum.ON_END.value:
+            if scheduled_notify.trigger == TriggerEnum.ON_END.value \
+                    and scheduled_notify.check_conditions(visit):
                 tasks.send_push.apply_async(
                     args=([visit.user.id], scheduled_notify.title, scheduled_notify.body),
                     countdown=scheduled_notify.minute_offset * 60 + visit.duration

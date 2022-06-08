@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from account.models import Condition
+
 
 class NotifyAdmin(admin.ModelAdmin):
     readonly_fields = ("date_creation",)
@@ -7,5 +9,10 @@ class NotifyAdmin(admin.ModelAdmin):
     list_display = ("title", "body", "date_creation")
 
 
+class ConditionInline(admin.TabularInline):
+    model = Condition
+    extra = 0
+
+
 class ScheduledNotifyAdmin(admin.ModelAdmin):
-    pass
+    inlines = (ConditionInline,)

@@ -4,8 +4,9 @@ from unittest.mock import patch, MagicMock
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from account.models import User
-from account.test_factories import InvintationFactory, VisitFactory, SchedulerNotifyFactory
+from account.models import User, SchedulerNotify
+from account.test_factories import InvintationFactory, VisitFactory, SchedulerNotifyFactory, \
+    ConditionNotifyFactory
 from account.test_utils import get_auth_client
 
 
@@ -252,6 +253,28 @@ class TestScheduledNotify(TestCase):
                                     data={'user_id': user.id, 'duration': 3600})
         self.assertEqual(response.status_code, 201)
         send_push_mock.assert_called_with(
-            args=([user.id], scheduled_notify.title, scheduled_notify.body),
-            countdown=120
+            args=([user.id], scheduled_notify.title, scheduled_notify.body), countdown=120
         )
+
+    def test_conditions(self):
+        self.assertTrue(ConditionNotifyFactory(variable='visit.duration', value=30).compare(VisitFactory(duration=30)))
+        self.assertFalse(ConditionNotifyFactory(variable='visit.duration', value=30).compare(VisitFactory(duration=40)))
+        self.assertTrue(ConditionNotifyFactory(variable='visit.is_free', value=True).compare(VisitFactory(is_free=True)))
+        self.assertFalse(ConditionNotifyFactory(variable='visit.is_free', value=True).compare(VisitFactory(is_free=False)))
+
+    @patch('account.tasks.send_push.apply_async')
+    def test_scheduled_notify_with_condition(self, send_push_mock: MagicMock):
+        scheduled_notify = SchedulerNotifyFactory(trigger='start')
+        ConditionNotifyFactory(variable='visit.is_free', value=True, scheduled_notify=scheduled_notify)
+        visit = VisitFactory(is_free=True)
+        SchedulerNotify.send_push_for_visit(visit)
+        send_push_mock.assert_called_with(
+            args=([visit.user.id], scheduled_notify.title, scheduled_notify.body), countdown=0
+        )
+
+    @patch('account.tasks.send_push.apply_async')
+    def test_scheduled_notify_with_false_condition(self, send_push_mock: MagicMock):
+        scheduled_notify = SchedulerNotifyFactory(trigger='start')
+        ConditionNotifyFactory(variable='visit.is_free', value=True, scheduled_notify=scheduled_notify)
+        SchedulerNotify.send_push_for_visit(VisitFactory(is_free=False))
+        self.assertFalse(send_push_mock.called)

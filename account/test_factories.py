@@ -2,7 +2,7 @@ from datetime import datetime
 
 import factory.fuzzy
 
-from account.models import User, Invintation, Visit, SchedulerNotify
+from account.models import User, Invintation, Visit, SchedulerNotify, Condition
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -47,3 +47,13 @@ class SchedulerNotifyFactory(factory.django.DjangoModelFactory):
     minute_offset = 0
     title = 'title'
     body = 'body'
+
+
+class ConditionNotifyFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Condition
+
+    variable = 'visit.duration'
+    comparator = '=='
+    value = '30'
+    scheduled_notify = factory.SubFactory(SchedulerNotifyFactory)
