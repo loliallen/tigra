@@ -7,6 +7,7 @@ class NotifyAdmin(admin.ModelAdmin):
     readonly_fields = ("date_creation",)
     fields = ("title", "body", "date_creation", "to_users")
     list_display = ("title", "body", "date_creation")
+    filter_horizontal = ("to_users",)
 
 
 class ConditionInline(admin.TabularInline):
