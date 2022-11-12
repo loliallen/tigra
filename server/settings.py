@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import environ
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -19,9 +20,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'dv7_vg+yan&j+6l8aicz^3#k@#w7dz*fbw%44%*==a#uiboh*4')
-
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+
+env = environ.Env(DEBUG=DEBUG)
+environ.Env.read_env(f'{BASE_DIR}/.env')
+
+SECRET_KEY = env.str('SECRET_KEY', default='dv7_vg+yan&j+6l8aicz^3#k@#w7dz*fbw%44%*==a#uiboh*4')
 
 ALLOWED_HOSTS = ["*"]
 
@@ -38,6 +42,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'django_celery_beat',
+    'drf_spectacular',
     'account',
     'mobile'
 ]
@@ -83,7 +89,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny'
-    ]
+    ],
+    'DEFAULT_SCHEMA_CLASS': "drf_spectacular.openapi.AutoSchema",
 }
 
 DJOSER = {
@@ -101,14 +108,7 @@ AUTH_USER_MODEL = 'account.User'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'db'),
-        'USER': os.environ.get('POSTGRES_USER', 'user'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'password'),
-        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', 5432),
-    }
+    'default': env.db('DATABASE_URL', default='psql://user:password@127.0.0.1:5432/db'),
 }
 
 
@@ -177,3 +177,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR + '/static_files/'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Your Project API',
+    'DESCRIPTION': 'Your project description',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
