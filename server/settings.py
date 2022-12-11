@@ -44,8 +44,9 @@ INSTALLED_APPS = [
     'djoser',
     'django_celery_beat',
     'drf_spectacular',
-    'account',
-    'mobile'
+    'apps.account',
+    'apps.mobile',
+    'apps.promotions',
 ]
 
 MIDDLEWARE = [
@@ -57,7 +58,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'account.middleware.RemoveTokenFromCheckInvinationMiddleware'
+    'apps.account.middleware.RemoveTokenFromCheckInvinationMiddleware'
 ]
 
 ROOT_URLCONF = 'server.urls'
@@ -95,8 +96,8 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     'SERIALIZERS': {
-        'user': 'account.serializer.GetUserSerializer',
-        'user_create': 'account.serializer.CreateUserSerializer',
+        'user': 'apps.account.serializer.GetUserSerializer',
+        'user_create': 'apps.account.serializer.CreateUserSerializer',
     },
     "LOGIN_FIELD": "phone"
 }
@@ -177,6 +178,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR + '/static_files/'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR + '/media/'
+
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Your Project API',

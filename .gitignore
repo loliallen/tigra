@@ -3,3 +3,5 @@ db.sqlite3
 .idea
 venv
 **/__pycache__/*
+/static_files/
+/media/

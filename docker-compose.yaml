@@ -33,6 +33,8 @@ services:
      CELERY_RABBIT_ADDRESS: "amqp://rabbitmq:rabbitmq@rabbitmq//"
     depends_on:
      - db
+    volumes:
+      - media:/app/media/
   rabbitmq:
     image: rabbitmq:3.8.6
     environment:
@@ -55,3 +57,5 @@ services:
     depends_on:
       - rabbitmq
       - db
+volumes:
+  media:
