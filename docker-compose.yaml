@@ -9,6 +9,9 @@ services:
     image: postgres:12.3
     env_file:
      - .env
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+      - ./db/backup:/backup
     ports:
      - "5432:5432"
   web_migrate:
@@ -34,7 +37,7 @@ services:
     depends_on:
      - db
     volumes:
-      - media:/app/media/
+      - ./media/:/code/media/
   rabbitmq:
     image: rabbitmq:3.8.6
     environment:
@@ -57,5 +60,3 @@ services:
     depends_on:
       - rabbitmq
       - db
-volumes:
-  media:

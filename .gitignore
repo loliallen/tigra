@@ -6,3 +6,4 @@ venv
 /static_files/
 /media/
 .env
+/db/
