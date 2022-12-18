@@ -3,27 +3,18 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.db import models
-from django.db.models import Count
+from django.db.models import (
+    Count, Max, F, ExpressionWrapper, DurationField, DateTimeField, Value,
+    CharField, Case, When
+)
+from django.db.models.functions import Cast, Concat
 from django.http import HttpResponseRedirect
+from django.utils import timezone
 
 from apps.mobile.models import Visit
 from apps.mobile.visits_logic import set_visit_if_free
 from apps.account.admin.tools import model_admin_url, InlineChangeList
 from apps.account.models import User, Child, Invintation
-
-
-class UserCreationForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ('__all__')
-
-    def save(self, commit=True):
-        # Save the provided password in hashed format
-        user = super(UserCreationForm, self).save(commit=False)
-        user.set_pasword(self.cleaned_data["password"])
-        if commit:
-            user.save()
-        return user
 
 
 class VisitAdminInline(admin.TabularInline):
@@ -155,6 +146,29 @@ class VisitsCountLowerFilter(admin.SimpleListFilter):
         )
 
 
+class ActiveVisitFilter(admin.SimpleListFilter):
+    title = 'Активный визит'
+    parameter_name = 'last_end'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Yes'),
+            ('no', 'No'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        if self.value() == 'yes':
+            return queryset.filter(
+                last_end__gte=timezone.now(),
+            )
+        else:
+            return queryset.filter(
+                last_end__lt=timezone.now(),
+            )
+
+
 def export_selected_objects(modeladmin, request, queryset):
     selected = queryset.values_list('pk', flat=True)
     return HttpResponseRedirect(f'/admin/account/notification/add/?to_users={",".join(str(i) for i in selected)}')
@@ -167,8 +181,8 @@ class CustomUserAdmin(UserAdmin):
 
     readonly_fields = ('date_joined', 'last_login', 'used_invintation_', 'phone_code',
                        'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
-    list_display = ("fio", "phone", "email", "date_joined", "visits_count")
-    list_filter = ("phone_confirmed", "date_joined", "last_login", "is_staff", VisitsCountGreaterFilter, VisitsCountLowerFilter)
+    list_display = ("fio", "phone", "email", "date_joined", "visits_count", "last_visit", "last_end")
+    list_filter = (ActiveVisitFilter, "phone_confirmed", "date_joined", "last_login", "is_staff", VisitsCountGreaterFilter, VisitsCountLowerFilter)
     actions = [export_selected_objects]
 
     formfield_overrides = {
@@ -179,9 +193,21 @@ class CustomUserAdmin(UserAdmin):
         return obj.visits_count
     visits_count.admin_order_field = 'visits_count'
 
+    def last_visit(self, obj):
+        return obj.last_visit
+    last_visit.admin_order_field = 'last_visit'
+
+    def last_end(self, obj):
+        return obj.last_end
+    last_end.admin_order_field = 'last_end'
+
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        return queryset.annotate(visits_count=Count('visits_user'))
+        return queryset.annotate(
+            visits_count=Count('visits_user'),
+            last_visit=Max('visits_user__date'),
+            last_end=Max(ExpressionWrapper(F('visits_user__date')+Cast(Concat(Case(When(visits_user__duration__gt=0, then=F("visits_user__duration")), default=0), Value(' seconds'), output_field=CharField()), output_field=DurationField()), output_field=DateTimeField())),
+        )
 
     def fio(self, obj):
         return f"{obj.first_name} {obj.last_name}"
