@@ -60,10 +60,3 @@ services:
     depends_on:
       - rabbitmq
       - db
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./media:/root/tigra/media
