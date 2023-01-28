@@ -1,7 +1,7 @@
 from admin_permissions.admin import FieldPermissionMixin
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin, UserCreationForm
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.db import models
 from django.db.models import (
@@ -176,8 +176,16 @@ def export_selected_objects(modeladmin, request, queryset):
 export_selected_objects.short_description = "Отправить пуш уведомления"
 
 
+class UserCreationFormCustom(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ("email", "first_name", "last_name", "phone",)
+
+
 class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
     model = User
+    add_form = UserCreationFormCustom
+    add_form_template = None
     inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
 
     readonly_fields = ('date_joined', 'last_login', 'used_invintation_', 'phone_code',
@@ -240,6 +248,13 @@ class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
         ]}),
     ]
 
+    add_fieldsets = [
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'first_name', 'last_name', 'phone'),
+        }),
+    ]
+
     fields_permissions = {
         # 'permission': ('field',)
         'account.can_change_email': ('email',),
@@ -259,6 +274,9 @@ class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
             'groups',
         )
     }
+
+    def get_inline_instances(self, request, obj=None):
+        return obj and super().get_inline_instances(request, obj) or []
 
     def save_formset(self, request, form, formset, change):
         if getattr(formset, 'save_before', None):
