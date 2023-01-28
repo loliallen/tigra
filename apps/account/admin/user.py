@@ -1,3 +1,4 @@
+from admin_permissions.admin import FieldPermissionMixin
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
@@ -175,7 +176,7 @@ def export_selected_objects(modeladmin, request, queryset):
 export_selected_objects.short_description = "Отправить пуш уведомления"
 
 
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
     model = User
     inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
 
@@ -215,34 +216,49 @@ class CustomUserAdmin(UserAdmin):
     def used_invintation_(self, obj):
         return model_admin_url(obj.used_invintation)
 
-    fieldsets = (
-        (None, {'fields' : (
-            'username',
-            'password',
-        )}),
-        ("Подтверждение", { 'fields' : (
-            'phone_code',
-            'phone_confirmed',
-            'used_invintation_',
-            'groups',
-        )}),
-        ("Персональная информация", { 'fields' : (
+    fieldsets = [
+        ("Персональная информация", {'fields': [
             'email',
             'first_name',
             'last_name',
             'phone',
-            'count_to_free_visit',
-            'free_reason',
-        )}),
-        ("Доступы", { 'fields' : (
-            'is_staff',
-            'is_superuser',
-        )}),
-        ("Важные даты", { 'fields' : (
+            'password',
+        ]}),
+        ("События", {'fields': [
+            'phone_code',
+            'phone_confirmed',
+            'used_invintation_',
             'date_joined',
             'last_login',
-        )}),
-    )
+            'count_to_free_visit',
+            'free_reason',
+        ]}),
+        ("Доступы", {'fields': [
+            'is_staff',
+            'is_superuser',
+            'groups',
+        ]}),
+    ]
+
+    fields_permissions = {
+        # 'permission': ('field',)
+        'account.can_change_email': ('email',),
+        'account.can_change_password': ('password',),
+        'account.can_see_events': (
+                'phone_code',
+                'phone_confirmed',
+                'used_invintation_',
+                'date_joined',
+                'last_login',
+                'count_to_free_visit',
+                'free_reason',
+        ),
+        'account.can_change_permissions': (
+            'is_staff',
+            'is_superuser',
+            'groups',
+        )
+    }
 
     def save_formset(self, request, form, formset, change):
         if getattr(formset, 'save_before', None):

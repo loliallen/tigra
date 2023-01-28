@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     'djoser',
     'django_celery_beat',
     'drf_spectacular',
+    'admin_permissions',
+    
+    # Internal
     'apps.account',
     'apps.mobile',
     'apps.promotions',

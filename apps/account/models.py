@@ -8,6 +8,7 @@ from typing import Optional
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import signals
+from django.utils.translation import gettext_lazy as _
 
 import server.firebase as fcm
 from apps.mobile.models import Visit, FreeReason, now
@@ -52,6 +53,14 @@ class Child(models.Model):
         verbose_name = "ребенок"
 
 class User(AbstractUser):
+    class Meta:
+        permissions = (
+            ('can_change_email', _('Show email field')),
+            ('can_change_password', _('Show password field')),
+            ('can_see_events', _('Show events sectinos')),
+            ('can_change_permissions', _('Show permissions')),
+        )
+
     phone = models.CharField(max_length=12, unique=True)
     username = models.TextField(default="username", blank=False)
     phone_code = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6, verbose_name='проверочный код телефона')
