@@ -9,12 +9,12 @@ def now():
 
 
 class FreeReason(models.TextChoices):
-    COUNT = 'CNT', _('Count')  # каждое n-ое посещение бесплатно
-    INVITE = 'INV', _('Invite')  # за приглашение посещение бесплатно
+    COUNT = 'CNT', 'По количеству посещений'  # каждое n-ое посещение бесплатно
+    INVITE = 'INV', 'Приглашение'  # за приглашение посещение бесплатно
 
 
 class Visit(models.Model):
-    date = models.DateTimeField(default=now, blank=True, null=True)
+    date = models.DateTimeField(default=now, blank=True, null=True, verbose_name="Дата")
     duration = models.IntegerField(blank=True, null=True, verbose_name="Продолжительность")  # почему то хранится в секундах _/('_')\_
     is_free = models.BooleanField(default=False, verbose_name="Бесплатный")
     free_reason = models.CharField(max_length=255, choices=FreeReason.choices, null=True,

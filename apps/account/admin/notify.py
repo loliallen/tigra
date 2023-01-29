@@ -17,3 +17,4 @@ class ConditionInline(admin.TabularInline):
 
 class ScheduledNotifyAdmin(admin.ModelAdmin):
     inlines = (ConditionInline,)
+    list_display = ("trigger", "minute_offset", "title",)

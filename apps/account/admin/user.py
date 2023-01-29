@@ -13,8 +13,8 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 
-from apps.mobile.models import Visit
-from apps.mobile.visits_logic import set_visit_if_free
+from apps.mobile.visits_logic import set_visit_if_free, count_to_free_visit as cnt_to_free_visit_logic
+from apps.mobile.models import Visit, FreeReason
 from apps.account.admin.tools import model_admin_url, InlineChangeList
 from apps.account.models import User, Child, Invintation
 
@@ -33,6 +33,7 @@ class VisitAdminInline(TabularInlinePaginated):
 
     def staff_(self, obj):
         return model_admin_url(obj.staff)
+    staff_.short_description = 'Сотрудник'
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super().get_formset(request, obj, **kwargs)
@@ -177,14 +178,17 @@ class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
     def visits_count(self, obj):
         return obj.visits_count
     visits_count.admin_order_field = 'visits_count'
+    visits_count.short_description = 'Количество визитов'
 
     def last_visit(self, obj):
         return obj.last_visit
     last_visit.admin_order_field = 'last_visit'
+    last_visit.short_description = 'Последний визит начало'
 
     def last_end(self, obj):
         return obj.last_end
     last_end.admin_order_field = 'last_end'
+    last_visit.short_description = 'Последний визит конец'
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -217,6 +221,14 @@ class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
 
     def used_invintation_(self, obj):
         return model_admin_url(obj.used_invintation)
+
+    def count_to_free_visit(self, obj):
+        return cnt_to_free_visit_logic(obj)[0]
+    count_to_free_visit.short_description = 'Бесплатный визит через'
+
+    def free_reason(self, obj):
+        return FreeReason(cnt_to_free_visit_logic(obj)[1]).name
+    free_reason.short_description = 'Причина бесплатного визита'
 
     fieldsets = [
         ("Персональная информация", {'fields': [

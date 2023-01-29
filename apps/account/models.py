@@ -27,15 +27,19 @@ def createCodeDigits4():
     return ''.join([random.choice(digits) for i in range(4)])
 
 SEX_CHOICES = (
-    ('F', 'female'),
-    ('M', 'male'),
+    ('F', 'Женский'),
+    ('M', 'Мужской'),
 )
 
 class Child(models.Model):
-    name = models.TextField()
-    age = models.IntegerField()
-    sex = models.TextField(choices=SEX_CHOICES)
-    birth_date = models.DateField(null=True, blank=True)
+    class Meta:
+        verbose_name = 'Ребенок'
+        verbose_name_plural = 'Дети'
+
+    name = models.TextField(verbose_name='Имя')
+    age = models.IntegerField(verbose_name='Возраст (вводится в приложении)')
+    sex = models.TextField(choices=SEX_CHOICES, verbose_name='Пол')
+    birth_date = models.DateField(null=True, blank=True, verbose_name='Дата рождения (заполняется сотрудником)')
     my_parent = models.ForeignKey(
         to='account.User',
         related_name='children',
@@ -46,7 +50,7 @@ class Child(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.my_parent.last_name} {self.my_parent.first_name})"
 
     class Meta:
         verbose_name_plural = "Дети"
@@ -54,6 +58,8 @@ class Child(models.Model):
 
 class User(AbstractUser):
     class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
         permissions = (
             ('can_change_email', _('Show email field')),
             ('can_change_password', _('Show password field')),
@@ -61,7 +67,7 @@ class User(AbstractUser):
             ('can_change_permissions', _('Show permissions')),
         )
 
-    phone = models.CharField(max_length=12, unique=True)
+    phone = models.CharField(max_length=12, unique=True, verbose_name='Номер телефона')
     username = models.TextField(default="username", blank=False)
     phone_code = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6, verbose_name='проверочный код телефона')
     phone_confirmed = models.BooleanField(default=False, blank=True, verbose_name='телефон подтвержден')
@@ -163,6 +169,10 @@ class Invintation(models.Model):
 
 
 class Notification(models.Model):
+    class Meta:
+        verbose_name = "Пуш"
+        verbose_name_plural = "Пуши"
+
     title = models.TextField()
     body = models.TextField()
     date_creation = models.DateTimeField(default=datetime.datetime.utcnow)
@@ -174,14 +184,10 @@ class Notification(models.Model):
     )
     scheduler = models.ForeignKey('SchedulerNotify', null=True, blank=True, on_delete=models.PROTECT)
 
-    class Meta:
-        verbose_name_plural = "Уведомления"
-        verbose_name = "уведомление"
-
 
 VARIABLE_CHOICES = (
-    ('visit.duration', 'visit duration'),
-    ('visit.is_free', 'visit is free'),
+    ('visit.duration', 'Продолжительность посещения'),
+    ('visit.is_free', 'Визит бесплатный?'),
 )
 
 VARIABLE_TYPE_MAP = {
@@ -200,9 +206,13 @@ COMPARATOR_CHOICES = (
 
 
 class Condition(models.Model):
-    variable = models.TextField(choices=VARIABLE_CHOICES, null=False, blank=False)
-    comparator = models.TextField(choices=COMPARATOR_CHOICES, null=False, blank=False)
-    value = models.CharField(null=False, blank=False, max_length=100)
+    class Meta:
+        verbose_name = 'Условие'
+        verbose_name_plural = 'Условия'
+
+    variable = models.TextField(choices=VARIABLE_CHOICES, null=False, blank=False, verbose_name='Переменная')
+    comparator = models.TextField(choices=COMPARATOR_CHOICES, null=False, blank=False, verbose_name='Тип сравнения')
+    value = models.CharField(null=False, blank=False, max_length=100, verbose_name='Значение')
     scheduled_notify = models.ForeignKey(to='account.SchedulerNotify',
                                          related_name="conditions",
                                          on_delete=models.PROTECT,
@@ -219,14 +229,18 @@ class TriggerEnum(enum.Enum):
 
 
 SCHEDULER_NOTIFY_CHOICES = (
-    ('start', 'on_visit_start'),
-    ('end', 'on_visit_end'),
+    ('start', 'Начало посещения'),
+    ('end', 'Конец посещение'),
 )
 
 
 class SchedulerNotify(models.Model):
-    trigger = models.TextField(choices=SCHEDULER_NOTIFY_CHOICES, null=False, blank=False)
-    minute_offset = models.IntegerField(default=0)
+    class Meta:
+        verbose_name = 'Периодический пуш'
+        verbose_name_plural = 'Периодические пуши'
+
+    trigger = models.TextField(choices=SCHEDULER_NOTIFY_CHOICES, null=False, blank=False, verbose_name='Событие активации')
+    minute_offset = models.IntegerField(default=0, verbose_name='Через сколько минут после события срабатывает')
     title = models.TextField(null=False, blank=False, default='-')
     body = models.TextField(null=False, blank=False, default='-')
 
