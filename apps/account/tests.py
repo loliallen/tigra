@@ -262,7 +262,7 @@ class TestScheduledNotify(TestCase):
         self.assertTrue(ConditionNotifyFactory(variable='visit.is_free', value=True).compare(VisitFactory(is_free=True)))
         self.assertFalse(ConditionNotifyFactory(variable='visit.is_free', value=True).compare(VisitFactory(is_free=False)))
 
-    @patch('account.tasks.send_push.apply_async')
+    @patch('apps.account.tasks.send_push.apply_async')
     def test_scheduled_notify_with_condition(self, send_push_mock: MagicMock):
         scheduled_notify = SchedulerNotifyFactory(trigger='start')
         ConditionNotifyFactory(variable='visit.is_free', value=True, scheduled_notify=scheduled_notify)
@@ -272,7 +272,7 @@ class TestScheduledNotify(TestCase):
             args=([visit.user.id], scheduled_notify.title, scheduled_notify.body), countdown=0
         )
 
-    @patch('account.tasks.send_push.apply_async')
+    @patch('apps.account.tasks.send_push.apply_async')
     def test_scheduled_notify_with_false_condition(self, send_push_mock: MagicMock):
         scheduled_notify = SchedulerNotifyFactory(trigger='start')
         ConditionNotifyFactory(variable='visit.is_free', value=True, scheduled_notify=scheduled_notify)

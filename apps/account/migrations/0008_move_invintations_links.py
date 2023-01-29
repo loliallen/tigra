@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
             update account_invintation as ai
             set creator_id = (
             select user_id
-            from apps.account_user_my_invintations
+            from account_user_my_invintations
             where invintation_id = ai.id)
         ''')
     ]

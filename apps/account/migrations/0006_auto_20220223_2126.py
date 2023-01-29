@@ -15,14 +15,14 @@ class Migration(migrations.Migration):
             update account_child as ac
             set my_parent_id = (
             select user_id
-            from apps.account_user_children
+            from account_user_children
             where child_id = ac.id)
         ''', reverse_sql=''),
         migrations.RunSQL('''
                 update mobile_visit as visit
                 set user_id = (
                 select user_id
-                from apps.account_user_visits
+                from account_user_visits
                 where account_user_visits.visit_id = visit.id)
 
         ''', reverse_sql=''),
