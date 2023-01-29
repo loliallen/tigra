@@ -23,11 +23,9 @@ class VisitAdminInline(TabularInlinePaginated):
     model = Visit
     fk_name = 'user'
     extra = 0
+    per_page = 5
     can_delete = False
     ordering = ('date',)
-    template = 'admin/edit_inline/tabular_paginated.html'
-    per_page = 5
-
     readonly_fields = ("is_free", "is_active", "free_reason", "staff_")
     fields = ("date", "duration", "is_free", "free_reason", "staff_")
 
