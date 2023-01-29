@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'drf_spectacular',
     'admin_permissions',
+    'django_admin_inline_paginator',
     
     # Internal
     'apps.account',

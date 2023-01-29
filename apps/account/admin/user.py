@@ -11,6 +11,7 @@ from django.db.models import (
 from django.db.models.functions import Cast, Concat
 from django.http import HttpResponseRedirect
 from django.utils import timezone
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 
 from apps.mobile.models import Visit
 from apps.mobile.visits_logic import set_visit_if_free
@@ -18,7 +19,7 @@ from apps.account.admin.tools import model_admin_url, InlineChangeList
 from apps.account.models import User, Child, Invintation
 
 
-class VisitAdminInline(admin.TabularInline):
+class VisitAdminInline(TabularInlinePaginated):
     model = Visit
     fk_name = 'user'
     extra = 0
@@ -34,34 +35,11 @@ class VisitAdminInline(admin.TabularInline):
         return model_admin_url(obj.staff)
 
     def get_formset(self, request, obj=None, **kwargs):
-        formset_class = super().get_formset(
-            request, obj, **kwargs)
+        formset_class = super().get_formset(request, obj, **kwargs)
 
-        class PaginationFormSet(formset_class):
-            def __init__(self, *args, **kwargs):
-                super(PaginationFormSet, self).__init__(*args, **kwargs)
-
-                qs = self.queryset
-                paginator = Paginator(qs, self.per_page)
-                try:
-                    page_num = int(request.GET.get('p', '0'))
-                except ValueError:
-                    page_num = 0
-
-                try:
-                    page = paginator.page(page_num + 1)
-                except (EmptyPage, InvalidPage):
-                    page = paginator.page(paginator.num_pages)
-
-                self.cl = InlineChangeList(request, page_num, paginator)
-                self.paginator = paginator
-
-                if self.cl.show_all:
-                    self._queryset = qs
-                else:
-                    self._queryset = page.object_list
-
+        class FormSet(formset_class):
             def clean(self):
+                # check if more one visit per time
                 new_instance = False
                 for form in self.forms:
                     current_is_new = form.instance.id is None
@@ -70,18 +48,16 @@ class VisitAdminInline(admin.TabularInline):
                             new_instance = True
                         else:
                             raise forms.ValidationError('Не более одного нового визита')
-                super(PaginationFormSet, self).clean()
+                return super().clean()
 
             def save_before(self, request, form, formset, change):
+                # set free visits on saving
                 for form in formset:
                     if form.instance.staff is None:
                         form.instance.staff = request.user
                         set_visit_if_free(form.instance)
                         form.instance.save()
-
-
-        PaginationFormSet.per_page = self.per_page
-        return PaginationFormSet
+        return FormSet
 
 
 class ChildrenAdminInline(admin.TabularInline):
@@ -214,8 +190,26 @@ class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
         queryset = super().get_queryset(request)
         return queryset.annotate(
             visits_count=Count('visits_user'),
+            # дата последнего визита
             last_visit=Max('visits_user__date'),
-            last_end=Max(ExpressionWrapper(F('visits_user__date')+Cast(Concat(Case(When(visits_user__duration__gt=0, then=F("visits_user__duration")), default=0), Value(' seconds'), output_field=CharField()), output_field=DurationField()), output_field=DateTimeField())),
+            # время конца последнего визита
+            last_end=Max(
+                ExpressionWrapper(
+                    (
+                        F('visits_user__date') +
+                        Cast(
+                            # преобразуем хранящиеся в int секунды в timedelta и складываем с датой-время начала посещения
+                            Concat(
+                                Case(When(visits_user__duration__gt=0, then=F("visits_user__duration")), default=0),
+                                Value(' seconds'),
+                                output_field=CharField()
+                            ),
+                            output_field=DurationField()
+                        )
+                    ),
+                    output_field=DateTimeField()
+                )
+            ),
         )
 
     def fio(self, obj):
@@ -256,7 +250,6 @@ class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
     ]
 
     fields_permissions = {
-        # 'permission': ('field',)
         'account.can_change_email': ('email',),
         'account.can_change_password': ('password',),
         'account.can_see_events': (
@@ -275,10 +268,12 @@ class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
         )
     }
 
+    # hide inline models in creation
     def get_inline_instances(self, request, obj=None):
         return obj and super().get_inline_instances(request, obj) or []
 
     def save_formset(self, request, form, formset, change):
+        # call save before method on FormSet to set up free visits
         if getattr(formset, 'save_before', None):
             formset.save_before(request, form, formset, change)
         formset.save()
