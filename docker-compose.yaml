@@ -36,6 +36,7 @@ services:
      CELERY_RABBIT_ADDRESS: "amqp://rabbitmq:rabbitmq@rabbitmq//"
     depends_on:
      - db
+     - web_migrate
     volumes:
       - ./media/:/code/media/
   rabbitmq:
