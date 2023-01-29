@@ -1,7 +1,7 @@
 from admin_permissions.admin import FieldPermissionMixin
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin, UserCreationForm
+from django.contrib.auth.admin import UserAdmin, UserChangeForm
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
 from django.db import models
 from django.db.models import (
@@ -151,16 +151,23 @@ def export_selected_objects(modeladmin, request, queryset):
 export_selected_objects.short_description = "Отправить пуш уведомления"
 
 
-class UserCreationFormCustom(forms.ModelForm):
+class UserCreationForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ("email", "first_name", "last_name", "phone",)
 
+    phone = forms.RegexField(r'^\d{11}$', help_text='в номере должно быть 11 цифр')
+
+
+class UserForm(UserChangeForm):
+    phone = forms.RegexField(r'^\d{11}$', help_text='в номере должно быть 11 цифр')
+
 
 class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
     model = User
-    add_form = UserCreationFormCustom
-    add_form_template = None
+    form = UserForm
+    add_form = UserCreationForm
+    #add_form_template = None
     inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
 
     readonly_fields = ('date_joined', 'last_login', 'used_invintation_', 'phone_code',
