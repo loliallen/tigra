@@ -174,7 +174,7 @@ class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
     readonly_fields = ('date_joined', 'last_login', 'used_invintation_', 'phone_code',
                        'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
     list_display = ("fio", "phone", "email", "date_joined", "visits_count", "last_visit", "last_end")
-    list_filter = (ActiveVisitFilter, "phone_confirmed", "date_joined", "last_login", "is_staff", VisitsCountGreaterFilter, VisitsCountLowerFilter)
+    list_filter = (ActiveVisitFilter, "phone_confirmed", "date_joined", "last_login", "is_staff", "groups", VisitsCountGreaterFilter, VisitsCountLowerFilter)
     actions = [export_selected_objects]
 
     formfield_overrides = {
