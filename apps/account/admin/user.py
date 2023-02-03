@@ -169,6 +169,7 @@ class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
     add_form = UserCreationForm
     #add_form_template = None
     inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
+    search_fields = ("phone", "first_name", "last_name", "email")
 
     readonly_fields = ('date_joined', 'last_login', 'used_invintation_', 'phone_code',
                        'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
