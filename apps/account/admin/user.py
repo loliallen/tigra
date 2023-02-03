@@ -156,11 +156,11 @@ class UserCreationForm(forms.ModelForm):
         model = User
         fields = ("email", "first_name", "last_name", "phone",)
 
-    phone = forms.RegexField(r'^\d{11}$', help_text='в номере должно быть 11 цифр')
+    phone = forms.RegexField(r'^\d{11}$', help_text='в номере должно быть 11 цифр', label='Номер телефона')
 
 
 class UserForm(UserChangeForm):
-    phone = forms.RegexField(r'^\d{11}$', help_text='в номере должно быть 11 цифр')
+    phone = forms.RegexField(r'^\d{11}$', help_text='в номере должно быть 11 цифр', label='Номер телефона')
 
 
 class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
@@ -193,7 +193,7 @@ class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
     def last_end(self, obj):
         return obj.last_end
     last_end.admin_order_field = 'last_end'
-    last_visit.short_description = 'Последний визит конец'
+    last_end.short_description = 'Последний визит конец'
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
