@@ -2,6 +2,7 @@ import hashlib
 from time import time
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,7 +18,7 @@ class VisitListView(APIView):
     permission_classes=[IsAuthenticated, IsAdminUser]
 
     def get(self, request):
-        visits = Visit.objects.filter(staff=request.user)
+        visits = Visit.objects.filter(staff=request.user, date__gte=timezone.now().date())
         data = CustomVisitSerializer(visits, many=True)
         return Response(data.data)
 
