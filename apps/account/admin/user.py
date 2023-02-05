@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from admin_permissions.admin import FieldPermissionMixin
 from django import forms
 from django.contrib import admin
@@ -163,7 +165,26 @@ class UserForm(UserChangeForm):
     phone = forms.RegexField(r'^\d{11}$', help_text='в номере должно быть 11 цифр', label='Номер телефона')
 
 
-class CustomUserAdmin(FieldPermissionMixin, UserAdmin):
+# TODO: remove it after django-admin-permissions applied pull-request fix same fix
+class FieldPermissionMixinCover(FieldPermissionMixin):
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super(FieldPermissionMixin, self).get_fieldsets(request, obj)
+
+        if not self.fields_permissions_read_only:
+            if getattr(self, 'fieldsets', None) is fieldsets:
+                fieldsets = deepcopy(fieldsets)
+            for permission, fields in self.fields_permissions.items():
+                if not request.user.has_perm(permission):
+                    if isinstance(fields, (str, list)):
+                        fields = (fields,)
+                    fieldsets = self.remove_fields(fieldsets, *fields)
+
+        return fieldsets
+
+
+
+class CustomUserAdmin(FieldPermissionMixinCover, UserAdmin):
     model = User
     form = UserForm
     add_form = UserCreationForm
