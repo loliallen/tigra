@@ -169,9 +169,15 @@ class CustomUserAdmin(UserAdmin):
     inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
     search_fields = ("phone", "first_name", "last_name", "email")
 
-    readonly_fields = ('date_joined', 'last_login', 'used_invintation_', 'phone_code',
-                       'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',)
-    list_display = ("fio", "phone", "email", "date_joined", "visits_count", "last_visit", "last_end")
+    readonly_fields = (
+        'date_joined', 'last_login', 'used_invintation_', 'phone_code',
+        'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',
+        'last_mobile_app_visit_date',
+    )
+    list_display = (
+        "fio", "phone", "email", "date_joined", "visits_count",
+        "last_visit", "last_end", "last_mobile_app_visit_date"
+    )
     list_filter = (ActiveVisitFilter, "phone_confirmed", "date_joined", "last_login", "is_staff", "groups", VisitsCountGreaterFilter, VisitsCountLowerFilter)
     actions = [export_selected_objects]
 
@@ -241,12 +247,15 @@ class CustomUserAdmin(UserAdmin):
             'last_name',
             'phone',
             'password',
+            'agree_for_video',
+            'agree_for_sms_notifications',
         ]}),
         ("События", {'fields': [
             'phone_code',
             'phone_confirmed',
             'used_invintation_',
             'date_joined',
+            'last_mobile_app_visit_date',
             'last_login',
             'count_to_free_visit',
             'free_reason',

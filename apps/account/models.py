@@ -72,6 +72,11 @@ class User(AbstractUser):
     phone_code = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6, verbose_name='проверочный код телефона')
     phone_confirmed = models.BooleanField(default=False, blank=True, verbose_name='телефон подтвержден')
     device_token = models.TextField(default="", verbose_name="токен устройства для отправки пушей")
+    last_mobile_app_visit_date = models.DateField(
+        blank=True, null=True, verbose_name='Дата последнего визита в приложение'
+    )
+    agree_for_video = models.BooleanField(verbose_name="Согласие на видеозапись", default=True)
+    agree_for_sms_notifications = models.BooleanField(verbose_name="Согласие смс уведомления", default=True)
     used_invintation = models.ForeignKey(
         to='account.Invintation',
         on_delete=models.CASCADE,
