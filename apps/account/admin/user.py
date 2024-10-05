@@ -181,10 +181,6 @@ class CustomUserAdmin(UserAdmin):
     list_filter = (ActiveVisitFilter, "phone_confirmed", "date_joined", "last_login", "is_staff", "groups", VisitsCountGreaterFilter, VisitsCountLowerFilter)
     actions = [export_selected_objects]
 
-    formfield_overrides = {
-        models.TextField: {'widget': forms.TextInput},
-    }
-
     def visits_count(self, obj):
         return obj.visits_count
     visits_count.admin_order_field = 'visits_count'
