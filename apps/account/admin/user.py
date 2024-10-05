@@ -249,6 +249,7 @@ class CustomUserAdmin(UserAdmin):
             'password',
             'agree_for_video',
             'agree_for_sms_notifications',
+            'comment_from_staff',
         ]}),
         ("События", {'fields': [
             'phone_code',

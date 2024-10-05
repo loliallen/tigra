@@ -77,6 +77,7 @@ class User(AbstractUser):
     )
     agree_for_video = models.BooleanField(verbose_name="Согласие на видеозапись", default=True)
     agree_for_sms_notifications = models.BooleanField(verbose_name="Согласие смс уведомления", default=True)
+    comment_from_staff = models.TextField(verbose_name="Комментарий сотрудника", blank=True, null=True)
     used_invintation = models.ForeignKey(
         to='account.Invintation',
         on_delete=models.CASCADE,
