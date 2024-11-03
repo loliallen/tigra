@@ -76,3 +76,4 @@ docker-compose up -d web_run
 - список все image `docker images ls`
 - удалить конкретный image `docker rmi <id>`
 - удалить все остановленные контейнеры `docker container prune`
+- удалить все неиспользуемые контейнеры, имаджи, сети и тд `docker system prune`
