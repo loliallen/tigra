@@ -70,3 +70,9 @@ docker-compose up web_migrate
 ```bash
 docker-compose up -d web_run
 ```
+
+## Если заканчивается место
+- проверить сколько места осталось `df -h`
+- список все image `docker images ls`
+- удалить конкретный image `docker rmi <id>`
+- удалить все остановленные контейнеры `docker container prune`
