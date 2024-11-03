@@ -1,7 +1,8 @@
 # Локальное разворачивание 
 1) Установить зависимости (python 3.8)
 ```bash
-pip install requirements.txt
+pip install pip-tools
+make install-dev
 ```
 2) Cоздать в корне `.env` файл на основе `.env.example`
 3) Cоздать в корне `creds.json` (доступы в firebase,

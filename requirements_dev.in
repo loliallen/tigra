@@ -1,0 +1,6 @@
+-c requirements.txt
+
+freezegun==1.2.1
+factory-boy==3.2.1
+Faker==11.3.0
+freezegun==1.2.1
