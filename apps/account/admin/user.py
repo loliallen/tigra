@@ -15,6 +15,7 @@ from apps.mobile.visits_logic import set_visit_if_free, count_to_free_visit as c
 from apps.mobile.models import Visit, FreeReason
 from apps.account.admin.tools import model_admin_url, InlineChangeList
 from apps.account.models import User, Child, Invintation
+from utils.admin import DateListFilter
 
 
 class VisitAdminInline(TabularInlinePaginated):
@@ -103,6 +104,11 @@ class VisitsCountGreaterFilter(admin.SimpleListFilter):
         )
 
 
+class LastVisitFilter(DateListFilter):
+    title = 'Дата последнего визита'
+    parameter_name = 'last_visit'
+
+
 class VisitsCountLowerFilter(admin.SimpleListFilter):
     title = 'Кол-во посещений меньше'
     parameter_name = 'visit_count_lower'
@@ -178,7 +184,7 @@ class CustomUserAdmin(UserAdmin):
         "fio", "phone", "email", "date_joined", "visits_count",
         "last_visit", "last_end", "last_mobile_app_visit_date"
     )
-    list_filter = (ActiveVisitFilter, "phone_confirmed", "date_joined", "last_login", "is_staff", "groups", VisitsCountGreaterFilter, VisitsCountLowerFilter)
+    list_filter = (ActiveVisitFilter, LastVisitFilter, "phone_confirmed", "date_joined", "last_login", "is_staff", "groups", VisitsCountGreaterFilter, VisitsCountLowerFilter)
     actions = [export_selected_objects]
 
     def visits_count(self, obj):
