@@ -13,9 +13,9 @@ from django_admin_inline_paginator.admin import TabularInlinePaginated
 
 from apps.mobile.visits_logic import set_visit_if_free, count_to_free_visit as cnt_to_free_visit_logic
 from apps.mobile.models import Visit, FreeReason
-from apps.account.admin.tools import model_admin_url, InlineChangeList
-from apps.account.models import User, Child, Invintation
-from utils.admin import DateListFilter
+from apps.account.admin.tools import model_admin_url
+from apps.account.models import User, Child, Invintation, AccountDocuments
+from utils.admin.filter import DateListFilter
 
 
 class VisitAdminInline(TabularInlinePaginated):
@@ -85,6 +85,41 @@ class InvintationAdminInline(admin.TabularInline):
     def visited_(self, obj):
         return obj.visited
     visited_.boolean = True
+
+
+class DocumentsAdminInline(admin.TabularInline):
+    model = AccountDocuments
+    extra = 0
+    can_delete = True
+    fk_name = "user"
+
+    readonly_fields = ("created_at", "added_by")
+    fields = ("created_at", "file", "added_by")
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset_class = super().get_formset(request, obj, **kwargs)
+
+        class FormSet(formset_class):
+            def clean(self):
+                # check if more one visit per time
+                new_instance = False
+                for form in self.forms:
+                    current_is_new = form.instance.id is None
+                    if current_is_new:
+                        if not new_instance:
+                            new_instance = True
+                        else:
+                            raise forms.ValidationError('Не более одного нового визита')
+                return super().clean()
+
+            def save_before(self, request, form, formset, change):
+                # set free visits on saving
+                for form in formset:
+                    if form.instance.added_by is None:
+                        form.instance.added_by = request.user
+                        form.instance.save()
+
+        return FormSet
 
 
 class VisitsCountGreaterFilter(admin.SimpleListFilter):
@@ -172,7 +207,7 @@ class CustomUserAdmin(UserAdmin):
     form = UserForm
     add_form = UserCreationForm
     #add_form_template = None
-    inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline)
+    inlines = (VisitAdminInline, ChildrenAdminInline, InvintationAdminInline, DocumentsAdminInline)
     search_fields = ("phone", "first_name", "last_name", "email")
 
     readonly_fields = (

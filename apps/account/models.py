@@ -120,6 +120,17 @@ class User(AbstractUser):
         return f"{self.last_name} {self.first_name} ({self.phone})"
 
 
+class AccountDocuments(models.Model):
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name='documents')
+    created_at = models.DateTimeField(verbose_name="Дата создания", auto_now_add=True)
+    file = models.FileField(verbose_name="Файл", upload_to='user_files/')
+    added_by = models.ForeignKey(to=User, on_delete=models.SET_NULL, null=True, related_name='added_documents')
+
+    class Meta:
+        verbose_name_plural = "Документы"
+        verbose_name = "Документ"
+
+
 class TmpHash(models.Model):
     LIFETIME = 600  # 10 минут
 
