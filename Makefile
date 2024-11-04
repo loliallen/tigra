@@ -23,10 +23,8 @@ release:
 	make clear_space
 
 dump:
-	docker exec -it tigra_db_1 sh
-	pg_dump db > dump.sql
-	exit
-	docker cp  tigra_db_1:/dump.sql media/dump.sql
+	docker exec -it tigra_db_1 sh -c "pg_dump db > dump.sql"
+	docker cp tigra_db_1:/dump.sql media/dump.sql
 
 rm_dump:
 	rm media/dump.sql
