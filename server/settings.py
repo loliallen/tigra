@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'admin_permissions',
     'django_admin_inline_paginator',
+    'rangefilter',
     
     # Internal
     'apps.account',

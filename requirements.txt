@@ -214,6 +214,10 @@ django-admin-permissions==1.1.0 \
     --hash=sha256:16572bf2822d0c684881ccea0e8e83387ae81954d30c6d0f3c91438809146087 \
     --hash=sha256:b6a279a54ee7f06cef202994214126b43c56237fc3441b28fdeba6fedd4a3730
     # via -r requirements.in
+django-admin-rangefilter==0.10.0 \
+    --hash=sha256:43fb3ea287e37bb786751f0e869d040e1cb75b867ff3886e3e40c80d8d040a0f \
+    --hash=sha256:6f5b84308b9aa673b47b7626b65bf3a0c5ac08ee20e06983225f748d61689d36
+    # via -r requirements.in
 django-celery-beat==2.2.1 \
     --hash=sha256:97ae5eb309541551bdb07bf60cc57cadacf42a74287560ced2d2c06298620234 \
     --hash=sha256:ab43049634fd18dc037927d7c2c7d5f67f95283a20ebbda55f42f8606412e66c

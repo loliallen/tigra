@@ -10,12 +10,14 @@ from django.db.models.functions import Cast, Concat
 from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django_admin_inline_paginator.admin import TabularInlinePaginated
+from rangefilter.filters import DateRangeFilter
+from django.utils.translation import gettext_lazy as _
 
 from apps.mobile.visits_logic import set_visit_if_free, count_to_free_visit as cnt_to_free_visit_logic
 from apps.mobile.models import Visit, FreeReason
 from apps.account.admin.tools import model_admin_url
 from apps.account.models import User, Child, Invintation, AccountDocuments
-from utils.admin.filter import DateListFilter
+from utils.admin.filter import DateListFilter, NumericListFilter
 
 
 class VisitAdminInline(TabularInlinePaginated):
@@ -122,43 +124,14 @@ class DocumentsAdminInline(admin.TabularInline):
         return FormSet
 
 
-class VisitsCountGreaterFilter(admin.SimpleListFilter):
-    title = 'Кол-во посещений больше'
-    parameter_name = 'visit_count'
-
-    def lookups(self, request, model_admin):
-        return tuple(
-            (f'>={i}', f'>={i}') for i in [1, 2, 3, 5, 10, 15, 20, 30, 50]
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() is None:
-            return queryset
-        return queryset.filter(
-            visits_count__gte=int(self.value()[2:]),
-        )
+class VisitsCountGreaterFilter(NumericListFilter):
+    title = 'Кол-во посещений'
+    parameter_name = 'visits_count'
 
 
 class LastVisitFilter(DateListFilter):
     title = 'Дата последнего визита'
     parameter_name = 'last_visit'
-
-
-class VisitsCountLowerFilter(admin.SimpleListFilter):
-    title = 'Кол-во посещений меньше'
-    parameter_name = 'visit_count_lower'
-
-    def lookups(self, request, model_admin):
-        return tuple(
-            (f'<={i}', f'<={i}') for i in [0, 1, 2, 3, 5, 10, 15, 20, 30, 50]
-        )
-
-    def queryset(self, request, queryset):
-        if self.value() is None:
-            return queryset
-        return queryset.filter(
-            visits_count__lte=int(self.value()[2:]),
-        )
 
 
 class ActiveVisitFilter(admin.SimpleListFilter):
@@ -167,8 +140,8 @@ class ActiveVisitFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('yes', 'Yes'),
-            ('no', 'No'),
+            ('yes', _('Yes')),
+            ('no', _('No')),
         )
 
     def queryset(self, request, queryset):
@@ -219,7 +192,16 @@ class CustomUserAdmin(UserAdmin):
         "fio", "phone", "email", "date_joined", "visits_count",
         "last_visit", "last_end", "last_mobile_app_visit_date"
     )
-    list_filter = (ActiveVisitFilter, LastVisitFilter, "phone_confirmed", "date_joined", "last_login", "is_staff", "groups", VisitsCountGreaterFilter, VisitsCountLowerFilter)
+    list_filter = (
+        ActiveVisitFilter,
+        LastVisitFilter,
+        "phone_confirmed",
+        ("date_joined", DateRangeFilter),
+        ("last_login", DateRangeFilter),
+        "is_staff",
+        "groups",
+        VisitsCountGreaterFilter
+    )
     actions = [export_selected_objects]
 
     def visits_count(self, obj):

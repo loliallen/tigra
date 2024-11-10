@@ -56,6 +56,7 @@ class Child(models.Model):
         verbose_name_plural = "Дети"
         verbose_name = "ребенок"
 
+
 class User(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
