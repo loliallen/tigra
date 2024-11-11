@@ -22,8 +22,8 @@ build:
 release:
 	make build
 	docker-compose stop web_run celery
-	docker-compose up -d web_run celery
 	make clear_space
+	docker-compose up -d web_run celery
 
 dump:
 	docker exec -it tigra_db_1 sh -c "pg_dump db > dump.sql"

@@ -7,8 +7,9 @@ RUN apt-get update \
 
 RUN mkdir /code
 WORKDIR /code
-COPY requirements.txt Makefile /code/
+COPY requirements.txt /code/
 RUN pip install pip-tools
+COPY Makefile /code/
 RUN make install-prod
 
 COPY . /code/
