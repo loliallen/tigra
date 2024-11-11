@@ -9,6 +9,8 @@ from django.db.models import (
 from django.db.models.functions import Cast, Concat
 from django.http import HttpResponseRedirect
 from django.utils import timezone
+from django.utils.safestring import mark_safe
+from django.utils.timezone import localtime
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from rangefilter.filters import DateRangeFilter
 from django.utils.translation import gettext_lazy as _
@@ -189,8 +191,7 @@ class CustomUserAdmin(UserAdmin):
         'last_mobile_app_visit_date',
     )
     list_display = (
-        "fio", "phone", "email", "date_joined", "visits_count",
-        "last_visit", "last_end", "last_mobile_app_visit_date"
+        "fio", "phone", "visits_count", "last_visit", "last_end", "child_name"
     )
     list_filter = (
         ActiveVisitFilter,
@@ -215,9 +216,18 @@ class CustomUserAdmin(UserAdmin):
     last_visit.short_description = 'Последний визит начало'
 
     def last_end(self, obj):
-        return obj.last_end
+        return localtime(obj.last_end).time()
     last_end.admin_order_field = 'last_end'
     last_end.short_description = 'Последний визит конец'
+
+    def child_name(self, obj):
+        return mark_safe("<br/>".join([
+            f"{child.name} {child.birth_date}"
+            for child in obj.children.all()
+        ]))
+    child_name.admin_order_field = 'child_name'
+    child_name.short_description = 'Дети'
+    child_name.allow_tags = True
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -243,7 +253,8 @@ class CustomUserAdmin(UserAdmin):
                     output_field=DateTimeField()
                 )
             ),
-        )
+            # child_name=StringAgg(Concat('children__name', Value(' '), Cast('children__birth_date', TextField())), delimiter=';'),
+        ).prefetch_related("children")
 
     def fio(self, obj):
         return f"{obj.first_name} {obj.last_name}"

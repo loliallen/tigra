@@ -26,5 +26,9 @@ dump:
 	docker exec -it tigra_db_1 sh -c "pg_dump db > dump.sql"
 	docker cp tigra_db_1:/dump.sql media/dump.sql
 
+load_dump:
+    docker cp ~/dump.sql tigra_db_1:/dump.sql
+    docker exec -it tigra_db_1 sh -c "psql db < dump.sql"
+
 rm_dump:
 	rm media/dump.sql
