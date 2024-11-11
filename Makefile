@@ -15,9 +15,12 @@ clear_space:
 	docker image prune -f
 	docker container prune -f
 
-release:
+build:
 	git pull
-	docker build web
+	docker-compose build web
+
+release:
+	make build
 	docker-compose stop web_run celery
 	docker-compose up -d web_run celery
 	make clear_space
