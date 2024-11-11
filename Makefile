@@ -27,7 +27,8 @@ release:
 
 dump:
 	docker exec -it tigra_db_1 sh -c "pg_dump db > dump.sql"
-	docker cp tigra_db_1:/dump.sql media/dump.sql
+	docker cp tigra_db_1:/dump.sql dump.sql
+	curl -X POST "https://api.telegram.org/bot7045683304:AAFlrPX-KB798xVHvPbpUnd5cUIbrQTjLs0/sendDocument?chat_id=-4597530598" --form "document=@dump.sql;type=text/csv" -H "Content-Type: multipart/form-data"
 
 load_dump:
 	docker cp ~/dump.sql tigra_db_1:/dump.sql
