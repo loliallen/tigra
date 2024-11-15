@@ -8,6 +8,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Cast, Concat
 from django.http import HttpResponseRedirect
+from django.urls import resolve
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.utils.timezone import localtime
@@ -45,6 +46,18 @@ class VisitAdminInline(TabularInlinePaginated):
     def staff_(self, obj):
         return model_admin_url(obj.staff)
     staff_.short_description = 'Сотрудник'
+
+    def get_parent_object_from_request(self, request):
+        resolved = resolve(request.path_info)
+        if resolved.kwargs.get('object_id'):
+            return self.parent_model.objects.get(pk=resolved.kwargs['object_id'])
+        return None
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "children":
+            user = self.get_parent_object_from_request(request)
+            kwargs["queryset"] = Child.objects.filter(my_parent=user)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super().get_formset(request, obj, **kwargs)
