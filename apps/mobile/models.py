@@ -38,6 +38,13 @@ class Visit(models.Model):
         null=True,
         verbose_name="Сотрудник",
     )
+    children = models.ManyToManyField(
+        verbose_name="Дети",
+        to='account.Child',
+        related_name="visits",
+        null=False,
+        blank=True,
+    )
 
     @property
     def end(self):

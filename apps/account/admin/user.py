@@ -1,5 +1,4 @@
 from django import forms
-from django.forms import widgets
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, UserChangeForm
 from django.db import models
@@ -31,22 +30,21 @@ class VisitAdminInline(TabularInlinePaginated):
     can_delete = False
     ordering = ('date',)
     readonly_fields = ("is_free", "is_active", "free_reason", "staff_")
-    fields = ("date", "duration", "is_free", "free_reason", "staff_")
+    fields = ("date", "duration", "is_free", "free_reason", "staff_", "children")
+
+    class Form(forms.ModelForm):
+        duration = forms.ChoiceField(choices=(
+            (60 * 30, '30 минут'),
+            (60 * 60, '1 час'),
+            (2 * 60 * 60, '2 часа'),
+            (11 * 60 * 60, 'до конца дня'),
+        ),)
+
+    form = Form
 
     def staff_(self, obj):
         return model_admin_url(obj.staff)
     staff_.short_description = 'Сотрудник'
-
-    def formfield_for_dbfield(self, db_field, **kwargs):
-        if db_field.name == 'duration':
-            kwargs['widget'] = widgets.Select(choices=(
-                    (60 * 30, '30 минут'),
-                    (60 * 60, '1 час'),
-                    (2 * 60 * 60, '2 часа'),
-                    (11 * 60 * 60, 'до конца дня'),
-                ),
-            )
-        return super().formfield_for_dbfield(db_field, **kwargs)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super().get_formset(request, obj, **kwargs)
