@@ -2,12 +2,8 @@ from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, UserChangeForm
 from django.db import models
-from django.db.models import (
-    Count, Max, F, ExpressionWrapper, DurationField, DateTimeField, Value,
-    CharField, Case, When
-)
-from django.db.models.functions import Cast, Concat
-from django.http import HttpResponseRedirect
+from django_object_actions import DjangoObjectActions
+from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import resolve
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -16,6 +12,8 @@ from django_admin_inline_paginator.admin import TabularInlinePaginated
 from rangefilter.filters import DateRangeFilter
 from django.utils.translation import gettext_lazy as _
 
+from apps.account.logic.facades.users import make_report
+from apps.account.logic.selectors.users import users_with_visits
 from apps.mobile.visits_logic import set_visit_if_free, count_to_free_visit as cnt_to_free_visit_logic
 from apps.mobile.models import Visit, FreeReason
 from apps.account.admin.tools import model_admin_url
@@ -182,10 +180,10 @@ class ActiveVisitFilter(admin.SimpleListFilter):
             )
 
 
-def export_selected_objects(modeladmin, request, queryset):
+def send_push_selected_objects(modeladmin, request, queryset):
     selected = queryset.values_list('pk', flat=True)
     return HttpResponseRedirect(f'/admin/account/notification/add/?to_users={",".join(str(i) for i in selected)}')
-export_selected_objects.short_description = "Отправить пуш уведомления"
+send_push_selected_objects.short_description = "Отправить пуш уведомления"
 
 
 class UserCreationForm(forms.ModelForm):
@@ -200,7 +198,7 @@ class UserForm(UserChangeForm):
     phone = forms.RegexField(r'^\d{11}$', help_text='в номере должно быть 11 цифр', label='Номер телефона')
 
 
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     model = User
     form = UserForm
     add_form = UserCreationForm
@@ -226,7 +224,16 @@ class CustomUserAdmin(UserAdmin):
         "groups",
         VisitsCountGreaterFilter
     )
-    actions = [export_selected_objects]
+    actions = [send_push_selected_objects]
+    changelist_actions = ('make_report',)
+
+    def make_report(self, request, obj):
+        file = make_report()
+        response = HttpResponse(file.getvalue(), content_type='application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="report.xls"'
+        return response
+
+    make_report.label = "Сгенерировть отчет"
 
     def visits_count(self, obj):
         return obj.visits_count
@@ -254,30 +261,7 @@ class CustomUserAdmin(UserAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        return queryset.annotate(
-            visits_count=Count('visits_user'),
-            # дата последнего визита
-            last_visit=Max('visits_user__date'),
-            # время конца последнего визита
-            last_end=Max(
-                ExpressionWrapper(
-                    (
-                        F('visits_user__date') +
-                        Cast(
-                            # преобразуем хранящиеся в int секунды в timedelta и складываем с датой-время начала посещения
-                            Concat(
-                                Case(When(visits_user__duration__gt=0, then=F("visits_user__duration")), default=0),
-                                Value(' seconds'),
-                                output_field=CharField()
-                            ),
-                            output_field=DurationField()
-                        )
-                    ),
-                    output_field=DateTimeField()
-                )
-            ),
-            # child_name=StringAgg(Concat('children__name', Value(' '), Cast('children__birth_date', TextField())), delimiter=';'),
-        ).prefetch_related("children")
+        return users_with_visits(queryset).prefetch_related("children")
 
     def fio(self, obj):
         return f"{obj.first_name} {obj.last_name}"
