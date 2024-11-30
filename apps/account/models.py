@@ -2,12 +2,14 @@ import datetime
 import enum
 import logging
 import random
+import typing
 from string import digits, ascii_uppercase
 from typing import Optional
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import signals
+from django.utils.timezone import localtime
 from django.utils.translation import gettext_lazy as _
 
 import server.firebase as fcm
@@ -51,6 +53,26 @@ class Child(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.my_parent.last_name} {self.my_parent.first_name})"
+
+    def years(self) -> typing.Optional[int]:
+        if self.birth_date is None:
+            if self.age is None:
+                return None
+            return self.age
+        today = localtime().date()
+        age = today.year - self.birth_date.year -(
+                (today.month, today.day) < (self.birth_date.month, self.birth_date.day)
+        )
+        return age
+
+    def age_str(self):
+        years = self.years()
+        if years % 10 == 1:
+            return f'{years} год'
+        elif years % 10 in [2, 3, 4]:
+            return f'{years} года'
+        else:
+            return f'{years} лет'
 
     class Meta:
         verbose_name_plural = "Дети"
