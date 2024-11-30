@@ -33,47 +33,19 @@ git clone ...
 генерируются в [консоли firebase](https://console.firebase.google.com)
 в разделе `Project Settings` -> `Service Account` -> `Generate 
 new private key`
-4) Собрать билд
+4) Собрать билд и запустить все сервисы
 ```bash
-docker-compose build web
+make release
 ```
-5) Развернуть локально базу:
-```bash
-docker-compose up -d db
-```
-6) Накатить миграции
-```bash
-docker-compose up web_migrate
-```
-7) Запустить
-```bash
-docker-compose up -d web_run
-```
+
 ## Обновить версию на сервере
-1) Спулить последние изменения
 ```bash
-git pull
-```
-2) Собрать новый билд
-```bash
-docker-compose build web
-```
-3) Остновить сервер
-```bash
-docker-compose stop web_run
-```
-4) Накатить миграции если надо
-```bash
-docker-compose up web_migrate
-```
-5) Запустить сервер
-```bash
-docker-compose up -d web_run
+make release
 ```
 
 ## Если заканчивается место
 - проверить сколько места осталось `df -h`
-- список все image `docker images ls`
+- список всех image `docker images ls`
 - удалить конкретный image `docker rmi <id>`
 - удалить все остановленные контейнеры `docker container prune`
 - удалить все неиспользуемые контейнеры, имаджи, сети и тд `docker system prune`
