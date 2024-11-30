@@ -2,7 +2,7 @@ import typing
 
 from django.db.models import (
     QuerySet, ExpressionWrapper, F, Value, CharField,
-    DurationField, DateTimeField
+    DurationField, DateTimeField, When, Case
 )
 from django.db.models.functions import Cast, Concat
 
@@ -23,7 +23,8 @@ def visits_with_end_at(queryset: typing.Optional[QuerySet[Visit]] = None) -> Que
                     Cast(
                         # преобразуем хранящиеся в int секунды в timedelta и складываем с датой-время начала посещения
                         Concat(
-                            F("duration"),
+                            Case(When(duration__gt=0,
+                                      then=F("duration")), default=0),
                             Value(' seconds'),
                             output_field=CharField()
                         ),
