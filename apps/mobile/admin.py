@@ -45,7 +45,7 @@ class VisitAdmin(admin.ModelAdmin):
         return visits_with_end_at().prefetch_related("children")
 
     def visit_end(self, obj: Visit):
-        return obj.date + datetime.timedelta(seconds=obj.duration)
+        return (obj.date + datetime.timedelta(seconds=obj.duration)).time()
     visit_end.admin_order_field = 'visit_end'
     visit_end.short_description = 'Конец визита'
 
