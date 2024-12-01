@@ -42,7 +42,8 @@ class VisitAdmin(admin.ModelAdmin):
     list_filter = (ActiveVisitFilter, ("date", DateRangeFilter), "is_free", "free_reason")
 
     def get_queryset(self, request):
-        return visits_with_end_at().prefetch_related("children")
+        queryset = super().get_queryset(request)
+        return visits_with_end_at(queryset).prefetch_related("children")
 
     def visit_end(self, obj: Visit):
         if obj.duration >= 11 * 60 * 60:
@@ -55,12 +56,7 @@ class VisitAdmin(admin.ModelAdmin):
         children = obj.children.all()
 
         if len(children):
-            return mark_safe("<br/>".join([
-                f"{child.name} {child.birth_date} "
-                f"({child.age_str()})"
-                f"{' Cегодня день рождение 🎉' if child.is_today_birthday() else ''}"
-                for child in children
-            ]))
+            return mark_safe("<br/>".join([child.admin_str() for child in children]))
         else:
             return "-"
     children_.admin_order_field = 'children'

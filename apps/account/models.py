@@ -78,6 +78,13 @@ class Child(models.Model):
         today = localtime().date()
         return self.birth_date.day == today.day and  self.birth_date.month == today.month
 
+    def admin_str(self):
+        return (
+            f"{self.name} {self.birth_date} "
+            f"({self.age_str()})"
+            f"{' Cегодня день рождение 🎉' if self.is_today_birthday() else ''}"
+        )
+
     class Meta:
         verbose_name_plural = "Дети"
         verbose_name = "ребенок"

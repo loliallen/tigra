@@ -246,14 +246,16 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     last_visit.short_description = 'Последний визит начало'
 
     def last_end(self, obj):
-        return localtime(obj.last_end).time()
+        time = localtime(obj.last_end).time()
+        if (obj.last_end - obj.last_visit).seconds >= 11 * 60 * 60:
+            return f"{time} (до конца дня)"
+        return time
     last_end.admin_order_field = 'last_end'
     last_end.short_description = 'Последний визит конец'
 
     def child_name(self, obj):
         return mark_safe("<br/>".join([
-            f"{child.name} {child.birth_date}"
-            for child in obj.children.all()
+            child.admin_str() for child in obj.children.all()
         ]))
     child_name.admin_order_field = 'child_name'
     child_name.short_description = 'Дети'
