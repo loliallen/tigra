@@ -247,8 +247,11 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
 
     def last_end(self, obj):
         time = localtime(obj.last_end).time()
-        if (obj.last_end - obj.last_visit).seconds >= 11 * 60 * 60:
-            return f"{time} (до конца дня)"
+        try:
+            if (obj.last_end - obj.last_visit).seconds >= 11 * 60 * 60:
+                return f"{time} (до конца дня)"
+        except:
+            pass
         return time
     last_end.admin_order_field = 'last_end'
     last_end.short_description = 'Последний визит конец'
