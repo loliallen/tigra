@@ -75,8 +75,11 @@ class Child(models.Model):
             return f'{years} лет'
 
     def is_today_birthday(self) -> bool:
-        today = localtime().date()
-        return self.birth_date.day == today.day and  self.birth_date.month == today.month
+        try:
+            today = localtime().date()
+            return self.birth_date.day == today.day and  self.birth_date.month == today.month
+        except:
+            return False
 
     def admin_str(self):
         return (
