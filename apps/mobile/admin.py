@@ -58,7 +58,7 @@ class VisitAdmin(admin.ModelAdmin):
             return mark_safe("<br/>".join([
                 f"{child.name} {child.birth_date} "
                 f"({child.age_str()})"
-                f"{' Cегодня день рождение 🎉' if child.birth_date == localtime().date() else ''}"
+                f"{' Cегодня день рождение 🎉' if child.is_today_birthday() else ''}"
                 for child in children
             ]))
         else:

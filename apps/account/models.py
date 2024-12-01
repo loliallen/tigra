@@ -74,6 +74,10 @@ class Child(models.Model):
         else:
             return f'{years} лет'
 
+    def is_today_birthday(self) -> bool:
+        today = localtime().date()
+        return self.birth_date.day == today.day and  self.birth_date.month == today.month
+
     class Meta:
         verbose_name_plural = "Дети"
         verbose_name = "ребенок"
