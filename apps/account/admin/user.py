@@ -55,6 +55,7 @@ class VisitAdminInline(TabularInlinePaginated):
         if db_field.name == "children":
             user = self.get_parent_object_from_request(request)
             kwargs["queryset"] = Child.objects.filter(my_parent=user)
+            kwargs["widget"] = forms.widgets.CheckboxSelectMultiple()
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_formset(self, request, obj=None, **kwargs):
