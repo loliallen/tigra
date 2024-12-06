@@ -2,13 +2,16 @@ import io
 
 import xlwt
 
-from apps.account.logic.selectors.users import users_with_visits
+from apps.account.logic.selectors.users import users_with_visits, users_with_fio
 
 
 def make_report() -> io.BytesIO:
     qs = (
-        users_with_visits().values_list(
-            "username",
+        users_with_fio(
+            users_with_visits()
+        )
+        .values_list(
+            "fio",
             "phone",
             "email",
             "children__name",

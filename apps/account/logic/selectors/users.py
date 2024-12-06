@@ -41,3 +41,15 @@ def users_with_visits(queryset: typing.Optional[QuerySet[User]] = None) -> Query
         ),
         # child_name=StringAgg(Concat('children__name', Value(' '), Cast('children__birth_date', TextField())), delimiter=';'),
     )
+
+
+def users_with_fio(queryset: typing.Optional[QuerySet[User]] = None) -> QuerySet[User]:
+    if queryset is None:
+        queryset = users_all()
+    return queryset.annotate(
+        fio=Concat(
+            F("first_name"),
+            Value(' '),
+            F("last_name"),
+        )
+    )
