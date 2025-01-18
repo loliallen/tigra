@@ -44,8 +44,6 @@ services:
     command: python telegram_client/app.py
     env_file:
       - .env
-    depends_on:
-      - db
   rabbitmq:
     image: rabbitmq:3.8.6
     environment:
