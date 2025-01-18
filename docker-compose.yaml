@@ -45,7 +45,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./user_data.json:/code/user_data.json
+      - ./telegram_bot_data/:/code/data/
   rabbitmq:
     image: rabbitmq:3.8.6
     environment:

@@ -18,7 +18,7 @@ logging.basicConfig(
 )
 
 # Файл для хранения данных
-DATA_FILE = "user_data.json"
+DATA_FILE = "data/user_data.json"
 
 # Загрузка данных из файла
 def load_data():
