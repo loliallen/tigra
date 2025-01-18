@@ -25,6 +25,12 @@ release:
 	make clear_space
 	docker-compose up -d web_run celery
 
+release_bot:
+	make build
+	docker-compose stop telegram_bot_run
+	make clear_space
+	docker-compose up -d telegram_bot_run
+
 dump:
 	docker exec -it tigra_db_1 sh -c "pg_dump db > dump.sql"
 	docker cp tigra_db_1:/dump.sql dump.sql
