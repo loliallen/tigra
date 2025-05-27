@@ -8,3 +8,4 @@ venv
 .env
 /db/
 /.github/
+/telegram_client/data/

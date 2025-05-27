@@ -1,0 +1,123 @@
+import os
+import sys
+import django
+from datetime import datetime, timedelta
+from asgiref.sync import sync_to_async
+from django.db.models import Prefetch
+
+# Добавляем путь к Django проекту
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Устанавливаем настройки Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server.settings')
+django.setup()
+
+# Импортируем модели после настройки Django
+from apps.account.models import User, Child
+from apps.mobile.models import Visit
+
+class SerializableUser:
+    """Класс-обертка для сериализации пользователя Django."""
+    def __init__(self, user: User):
+        self.id = user.id
+        self.phone = user.phone
+        self._user = user
+
+    @property
+    def user(self):
+        if not hasattr(self, '_loaded_user'):
+            self._loaded_user = User.objects.get(id=self.id)
+        return self._loaded_user
+
+class DjangoClient:
+    @staticmethod
+    @sync_to_async
+    def get_or_create_user(phone: str) -> SerializableUser:
+        """Получить или создать пользователя по номеру телефона."""
+        phone = phone.replace('+', '')  # Убираем + если есть
+        try:
+            user = User.objects.get(phone=phone)
+        except User.DoesNotExist:
+            user = User.objects.create(
+                phone=phone,
+                phone_confirmed=True,  # Подтверждаем телефон, так как он получен через Telegram
+            )
+        return SerializableUser(user)
+
+    @staticmethod
+    @sync_to_async
+    def get_user_children(user: SerializableUser) -> list:
+        """Получить список детей пользователя."""
+        return list(Child.objects.filter(my_parent_id=user.id))
+
+    @staticmethod
+    @sync_to_async
+    def add_child(user: SerializableUser, name: str, birth_date_str: str) -> Child:
+        """Добавить ребенка."""
+        birth_date = datetime.strptime(birth_date_str, "%d.%m.%Y").date()
+        age = (datetime.now().date() - birth_date).days // 365
+        
+        child = Child.objects.create(
+            my_parent_id=user.id,
+            name=name,
+            birth_date=birth_date,
+            age=age,
+            sex='M'  # По умолчанию, можно добавить выбор пола в боте
+        )
+        return child
+
+    @staticmethod
+    @sync_to_async
+    def update_child(child_id: int, name: str = None, birth_date_str: str = None) -> Child:
+        """Обновить данные ребенка."""
+        child = Child.objects.get(id=child_id)
+        if name:
+            child.name = name
+        if birth_date_str:
+            birth_date = datetime.strptime(birth_date_str, "%d.%m.%Y").date()
+            child.birth_date = birth_date
+            child.age = (datetime.now().date() - birth_date).days // 365
+        child.save()
+        return child
+
+    @staticmethod
+    @sync_to_async
+    def delete_child(child_id: int):
+        """Удалить ребенка."""
+        Child.objects.filter(id=child_id).delete()
+
+    @staticmethod
+    @sync_to_async
+    def create_visit(user: SerializableUser, duration_hours: int, children_ids: list) -> Visit:
+        """Создать новое посещение."""
+        visit = Visit.objects.create(
+            user_id=user.id,
+            date=datetime.now(),
+            duration=duration_hours * 3600,  # Переводим часы в секунды
+            is_active=True
+        )
+        if children_ids:
+            visit.children.set(Child.objects.filter(id__in=children_ids))
+        # Обновляем объект, чтобы получить связанные данные
+        visit = Visit.objects.prefetch_related('children').get(id=visit.id)
+        return visit
+
+    @staticmethod
+    @sync_to_async
+    def get_user_visits(user: SerializableUser) -> list:
+        """Получить список посещений пользователя."""
+        return list(Visit.objects.filter(user_id=user.id)
+                   .prefetch_related('children')
+                   .order_by('-date'))
+
+    @staticmethod
+    @sync_to_async
+    def get_visit_children(visit: Visit) -> list:
+        """Получить список детей для посещения."""
+        return list(visit.children.all())
+
+    @staticmethod
+    @sync_to_async
+    def get_visit_children_names(visit: Visit) -> list:
+        """Получить список имен детей для посещения."""
+        return [child.name for child in visit.children.all()] 

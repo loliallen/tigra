@@ -1,6 +1,6 @@
 import logging
-import json
 import os
+from pathlib import Path
 
 from telegram import (
     Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton,
@@ -8,8 +8,9 @@ from telegram import (
 )
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler,
-    ContextTypes, MessageHandler, filters
+    ContextTypes, MessageHandler, filters, PicklePersistence, PersistenceInput
 )
+from django_client import DjangoClient
 
 # Логирование
 logging.basicConfig(
@@ -17,25 +18,12 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# Файл для хранения данных
-DATA_FILE = "data/user_data.json"
+# Создаем директорию для хранения данных если её нет
+PERSISTENCE_DIR = Path(__file__).parent / "data"
+PERSISTENCE_DIR.mkdir(exist_ok=True)
 
-# Загрузка данных из файла
-def load_data():
-    try:
-        with open(DATA_FILE, "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {}
-
-# Сохранение данных в файл
-def save_data():
-    with open(DATA_FILE, "w") as file:
-        json.dump(users_data, file, indent=4)
-
-# Хранилище данных
-users_data = load_data()
-
+# Инициализация Django клиента
+django_client = DjangoClient()
 
 # Функция для формирования главного меню
 def get_main_menu():
@@ -50,7 +38,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработка входящих сообщений."""
     user_id = str(update.effective_user.id)
 
-    if user_id not in users_data:
+    if "django_user" not in context.user_data:
         # Если пользователь не авторизован, направляем в начало
         return await start(update, context)
     else:
@@ -59,11 +47,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Начало работы и запрос номера телефона."""
-    user_id = str(update.effective_user.id)
     user = update.effective_user
 
-    if user_id in users_data:
-        # Если пользователь уже есть в данных, перенаправляем в меню
+    if "django_user" in context.user_data:
+        # Если пользователь уже авторизован, перенаправляем в меню
         await update.message.reply_text(
             f"Добро пожаловать обратно, {user.first_name}!",
             reply_markup=get_main_menu()
@@ -83,13 +70,10 @@ async def authorize(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Авторизация пользователя."""
     contact = update.message.contact
     if contact:
-        user_id = str(update.effective_user.id)
-        users_data[user_id] = {
-            "phone": contact.phone_number,
-            "children": [],
-            "visits": []
-        }
-        save_data()  # Сохраняем данные
+        # Получаем или создаем пользователя в Django
+        django_user = await django_client.get_or_create_user(contact.phone_number)
+        context.user_data["django_user"] = django_user
+        
         await update.message.reply_text(
             "Вы успешно авторизовались!",
             reply_markup=get_main_menu()
@@ -100,7 +84,7 @@ async def authorize(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Главное меню."""
     text = update.message.text
-    user_id = str(update.effective_user.id)
+    django_user = context.user_data.get("django_user")
 
     if context.user_data.get("adding_child"):
         return await add_child(update, context)
@@ -120,9 +104,17 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ])
         )
     elif text == "Список посещений":
-        visits = users_data.get(user_id, {}).get("visits", [])
+        visits = await django_client.get_user_visits(django_user)
         if visits:
-            visits_text = "\n".join([f"{i + 1}. Слот: {v['slot']} часов, Участники: {v['participants']}" for i, v in enumerate(visits)])
+            visits_text = []
+            for i, visit in enumerate(visits):
+                children_names = await django_client.get_visit_children_names(visit)
+                visits_text.append(
+                    f"{i + 1}. Дата: {visit.date.strftime('%d.%m.%Y %H:%M')}, "
+                    f"Продолжительность: {visit.duration // 3600} ч., "
+                    f"Дети: {', '.join(children_names)}"
+                )
+            visits_text = "\n".join(visits_text)
         else:
             visits_text = "У вас пока нет посещений."
         await update.message.reply_text(visits_text, reply_markup=get_main_menu())
@@ -130,35 +122,43 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Введите имя ребенка:")
         context.user_data["adding_child"] = True
     elif text == "Список детей":
-        children = users_data.get(user_id, {}).get("children", [])
+        children = await django_client.get_user_children(django_user)
         if children:
-            children_text = "\n".join([f"{i + 1}. {child['name']} (Дата рождения: {child['birth_date']})" for i, child in enumerate(children)])
+            children_text = "\n".join([
+                f"{i + 1}. {child.name} "
+                f"(Дата рождения: {child.birth_date.strftime('%d.%m.%Y')})"
+                for i, child in enumerate(children)
+            ])
         else:
             children_text = "У вас пока нет добавленных детей."
         await update.message.reply_text(children_text)
     elif text == "Изменить ребенка":
-        children = users_data.get(user_id, {}).get("children", [])
+        children = await django_client.get_user_children(django_user)
         if not children:
             await update.message.reply_text("У вас нет детей для изменения.")
         else:
-            # Отправим пользователю список детей для выбора
             child_buttons = [
-                [InlineKeyboardButton(f"{child['name']} (Дата рождения: {child['birth_date']})", callback_data=f"edit_{i}")]
-                for i, child in enumerate(children)
+                [InlineKeyboardButton(
+                    f"{child.name} (Дата рождения: {child.birth_date.strftime('%d.%m.%Y')})",
+                    callback_data=f"edit_{child.id}"
+                )]
+                for child in children
             ]
             await update.message.reply_text(
                 "Выберите ребенка для изменения:",
                 reply_markup=InlineKeyboardMarkup(child_buttons)
             )
     elif text == "Удалить ребенка":
-        children = users_data.get(user_id, {}).get("children", [])
+        children = await django_client.get_user_children(django_user)
         if not children:
             await update.message.reply_text("У вас нет детей для удаления.")
         else:
-            # Отправим пользователю список детей для выбора
             child_buttons = [
-                [InlineKeyboardButton(f"{child['name']} (Дата рождения: {child['birth_date']})", callback_data=f"delete_{i}")]
-                for i, child in enumerate(children)
+                [InlineKeyboardButton(
+                    f"{child.name} (Дата рождения: {child.birth_date.strftime('%d.%m.%Y')})",
+                    callback_data=f"delete_{child.id}"
+                )]
+                for child in children
             ]
             await update.message.reply_text(
                 "Выберите ребенка для удаления:",
@@ -168,10 +168,9 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Пожалуйста, выберите действие из меню.", reply_markup=get_main_menu())
 
 async def add_child(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Добавление ребенка с сохранением имени и даты рождения."""
-    user_id = str(update.effective_user.id)
+    """Добавление ребенка."""
+    django_user = context.user_data.get("django_user")
 
-    # Проверяем, на каком этапе находится пользователь
     if "adding_child" in context.user_data and context.user_data["adding_child"]:
         if "child_name" not in context.user_data:
             # Сохраняем имя ребенка
@@ -182,201 +181,202 @@ async def add_child(update: Update, context: ContextTypes.DEFAULT_TYPE):
             birth_date = update.message.text
             try:
                 # Проверка формата даты
-                import datetime
-                datetime.datetime.strptime(birth_date, "%d.%m.%Y")
+                child = await django_client.add_child(
+                    django_user,
+                    context.user_data["child_name"],
+                    birth_date
+                )
+                
+                # Очищаем данные
+                del context.user_data["adding_child"]
+                del context.user_data["child_name"]
+                
+                await update.message.reply_text(
+                    f"Ребенок {child.name} успешно добавлен!",
+                    reply_markup=get_main_menu()
+                )
             except ValueError:
-                # Неверный формат даты
                 await update.message.reply_text("Неверный формат даты. Попробуйте еще раз (ДД.ММ.ГГГГ):")
-                return
 
-            # Добавляем ребенка в список
-            child_name = context.user_data["child_name"]
-            users_data[user_id]["children"].append({
-                "name": child_name,
-                "birth_date": birth_date
-            })
-            save_data()  # Сохраняем данные в файл
-
-            # Оповещаем пользователя и возвращаем в главное меню
-            await update.message.reply_text(
-                f"Ребенок {child_name} (Дата рождения: {birth_date}) успешно добавлен!",
-                reply_markup=get_main_menu()
-            )
-
-            # Очищаем данные
-            del context.user_data["adding_child"]
-            del context.user_data["child_name"]
-
-    else:
-        # Инициализируем процесс добавления ребенка
-        context.user_data["adding_child"] = True
-        await update.message.reply_text("Введите имя ребенка:")
-
-# Обработчик изменения ребенка
 async def edit_child(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Изменение информации о ребенке."""
+    """Обработка выбора ребенка для редактирования."""
     query = update.callback_query
-    child_index = int(query.data.split("_")[-1])
-    user_id = str(update.effective_user.id)
-    child = users_data[user_id]["children"][child_index]
-
-    # Запрос на изменение имени или даты рождения
-    await query.answer()
-    await query.edit_message_text(
-        text=f"Вы выбрали ребенка: {child['name']} (Дата рождения: {child['birth_date']}).\n\nЧто вы хотите изменить?",
+    child_id = int(query.data.split('_')[1])
+    context.user_data["edit_child_id"] = child_id
+    
+    await query.message.reply_text(
+        "Что вы хотите изменить?",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("Изменить имя", callback_data=f"edit_name_{child_index}")],
-            [InlineKeyboardButton("Изменить дату рождения", callback_data=f"edit_birthdate_{child_index}")]
+            [InlineKeyboardButton("Имя", callback_data="change_name"),
+             InlineKeyboardButton("Дату рождения", callback_data="change_birthdate")]
         ])
     )
 
-# Обработчик изменения имени
 async def change_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Изменение имени ребенка."""
+    """Запрос нового имени."""
     query = update.callback_query
-    child_index = int(query.data.split("_")[2])
-    user_id = str(update.effective_user.id)
-    child = users_data[user_id]["children"][child_index]
-
-    await query.answer()
-    await query.edit_message_text(
-        text=f"Вы выбрали ребенка: {child['name']}. Введите новое имя:"
-    )
-    context.user_data["edit_child_index"] = child_index
     context.user_data["edit_field"] = "name"
+    await query.message.reply_text("Введите новое имя:")
 
-
-# Обработчик получения нового имени
 async def receive_new_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработка нового имени для ребенка."""
-    user_id = str(update.effective_user.id)
-    child_index = context.user_data["edit_child_index"]
+    """Обработка нового имени."""
     new_name = update.message.text
-
-    # Обновляем имя ребенка в данных
-    users_data[user_id]["children"][child_index]["name"] = new_name
-    save_data()
-
+    child_id = context.user_data["edit_child_id"]
+    
+    child = await django_client.update_child(child_id, name=new_name)
+    
+    del context.user_data["edit_child_id"]
+    del context.user_data["edit_field"]
+    
     await update.message.reply_text(
-        f"Имя ребенка успешно изменено на: {new_name}",
+        f"Имя успешно изменено на {child.name}!",
         reply_markup=get_main_menu()
     )
 
-    # Очищаем данные из контекста
-    del context.user_data["edit_child_index"]
-    del context.user_data["edit_field"]
-
-
-# Обработчик изменения даты рождения
 async def change_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Изменение даты рождения ребенка."""
+    """Запрос новой даты рождения."""
     query = update.callback_query
-    child_index = int(query.data.split("_")[2])
-    user_id = str(update.effective_user.id)
-    child = users_data[user_id]["children"][child_index]
-
-    await query.answer()
-    await query.edit_message_text(
-        text=f"Вы выбрали ребенка: {child['name']}. Введите новую дату рождения в формате ДД.ММ.ГГГГ:"
-    )
-    context.user_data["edit_child_index"] = child_index
     context.user_data["edit_field"] = "birthdate"
+    await query.message.reply_text("Введите новую дату рождения в формате ДД.ММ.ГГГГ:")
 
-
-# Обработчик получения новой даты рождения
 async def receive_new_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработка новой даты рождения для ребенка."""
-    user_id = str(update.effective_user.id)
-    child_index = context.user_data["edit_child_index"]
+    """Обработка новой даты рождения."""
     new_birthdate = update.message.text
-
+    child_id = context.user_data["edit_child_id"]
+    
     try:
-        # Проверка формата даты
-        import datetime
-        datetime.datetime.strptime(new_birthdate, "%d.%m.%Y")
+        child = await django_client.update_child(child_id, birth_date_str=new_birthdate)
+        del context.user_data["edit_child_id"]
+        del context.user_data["edit_field"]
+        
+        await update.message.reply_text(
+            f"Дата рождения успешно изменена на {child.birth_date.strftime('%d.%m.%Y')}!",
+            reply_markup=get_main_menu()
+        )
     except ValueError:
-        # Неверный формат даты
         await update.message.reply_text("Неверный формат даты. Попробуйте еще раз (ДД.ММ.ГГГГ):")
-        return
 
-    # Обновляем дату рождения ребенка в данных
-    users_data[user_id]["children"][child_index]["birth_date"] = new_birthdate
-    save_data()
-
-    await update.message.reply_text(
-        f"Дата рождения ребенка успешно изменена на: {new_birthdate}",
+async def delete_child(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Удаление ребенка."""
+    query = update.callback_query
+    child_id = int(query.data.split('_')[1])
+    
+    await django_client.delete_child(child_id)
+    
+    await query.message.reply_text(
+        "Ребенок успешно удален!",
         reply_markup=get_main_menu()
     )
-
-    # Очищаем данные из контекста
-    del context.user_data["edit_child_index"]
-    del context.user_data["edit_field"]
-
-
-# Обработчик удаления ребенка
-async def delete_child(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Удаление ребенка из списка."""
-    query = update.callback_query
-    child_index = int(query.data.split("_")[1])
-    user_id = str(update.effective_user.id)
-
-    # Удаляем ребенка из списка
-    users_data[user_id]["children"].pop(child_index)
-    save_data()
-
-    await query.answer()
-    await query.edit_message_text(
-        text="Ребенок успешно удален из списка!",
-        # reply_markup=get_main_menu()
-    )
-
 
 async def select_slot(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Выбор слота времени."""
+    """Обработка выбора временного слота."""
     query = update.callback_query
-    await query.answer()
-    slot = int(query.data.split("_")[1])
-    context.user_data["slot"] = slot
-    await query.edit_message_text(
-        text="Выберите количество участников:",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton(f"{i} участник(ов)", callback_data=f"participants_{i}") for i in range(1, 6)]
-        ])
+    slot = int(query.data.split('_')[1])
+    context.user_data["selected_slot"] = slot
+    
+    # Получаем список детей пользователя
+    django_user = context.user_data.get("django_user")
+    children = await django_client.get_user_children(django_user)
+    
+    if not children:
+        await query.message.reply_text(
+            "У вас нет добавленных детей. Сначала добавьте детей.",
+            reply_markup=get_main_menu()
+        )
+        return
+    
+    # Создаем кнопки для выбора детей
+    child_buttons = [
+        [InlineKeyboardButton(
+            f"{child.name}",
+            callback_data=f"child_{child.id}"
+        )]
+        for child in children
+    ]
+    child_buttons.append([InlineKeyboardButton("Готово", callback_data="finish_selection")])
+    
+    context.user_data["selected_children"] = []
+    
+    await query.message.reply_text(
+        "Выберите детей для посещения (можно выбрать несколько):",
+        reply_markup=InlineKeyboardMarkup(child_buttons)
     )
 
 async def select_participants(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Выбор количества участников."""
+    """Обработка выбора участников."""
     query = update.callback_query
-    await query.answer()
-    participants = int(query.data.split("_")[1])
-    user_id = str(update.effective_user.id)
-    users_data[user_id]["visits"].append({
-        "slot": context.user_data["slot"],
-        "participants": participants
-    })
-    save_data()  # Сохраняем данные
-    await query.edit_message_text(
-        text=f"Посещение на {context.user_data['slot']} часов для {participants} участников создано."
-    )
-
-
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+    
+    if query.data == "finish_selection":
+        if not context.user_data.get("selected_children"):
+            await query.message.reply_text("Выберите хотя бы одного ребенка.")
+            return
+        
+        # Создаем посещение
+        django_user = context.user_data.get("django_user")
+        slot = context.user_data["selected_slot"]
+        children_ids = context.user_data["selected_children"]
+        
+        visit = await django_client.create_visit(django_user, slot, children_ids)
+        children_names = await django_client.get_visit_children_names(visit)
+        
+        # Очищаем временные данные
+        del context.user_data["selected_slot"]
+        del context.user_data["selected_children"]
+        
+        await query.message.reply_text(
+            f"Посещение успешно создано!\n"
+            f"Дата: {visit.date.strftime('%d.%m.%Y %H:%M')}\n"
+            f"Продолжительность: {visit.duration // 3600} ч.\n"
+            f"Участники: {', '.join(children_names)}",
+            reply_markup=get_main_menu()
+        )
+    else:
+        child_id = int(query.data.split('_')[1])
+        selected_children = context.user_data.get("selected_children", [])
+        
+        if child_id in selected_children:
+            selected_children.remove(child_id)
+            await query.answer("Ребенок удален из списка")
+        else:
+            selected_children.append(child_id)
+            await query.answer("Ребенок добавлен в список")
+        
+        context.user_data["selected_children"] = selected_children
 
 def main():
-    """Основная функция для запуска бота."""
-    application = ApplicationBuilder().token(BOT_TOKEN).build()
+    """Запуск бота."""
+    # Получаем токен из переменной окружения
+    token = os.getenv("BOT_TOKEN")
+    if not token:
+        raise ValueError("Пожалуйста, установите переменную окружения BOT_TOKEN")
 
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    # Создаем хранилище для данных
+    persistence = PicklePersistence(
+        filepath=str(PERSISTENCE_DIR / "bot_data.pickle"),
+        store_data=PersistenceInput(
+            bot_data=True,
+            chat_data=True,
+            user_data=True,
+            callback_data=False
+        )
+    )
+
+    # Создаем приложение с поддержкой сохранения данных
+    application = ApplicationBuilder().token(token).persistence(persistence).build()
+
+    # Добавляем обработчики
+    application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.CONTACT, authorize))
-
     application.add_handler(CallbackQueryHandler(select_slot, pattern="^slot_"))
-    application.add_handler(CallbackQueryHandler(select_participants, pattern="^participants_"))
-    application.add_handler(CallbackQueryHandler(change_name, pattern="^edit_name_"))
-    application.add_handler(CallbackQueryHandler(change_birthdate, pattern="^edit_birthdate_"))
+    application.add_handler(CallbackQueryHandler(select_participants, pattern="^(child_|finish_)"))
     application.add_handler(CallbackQueryHandler(edit_child, pattern="^edit_"))
     application.add_handler(CallbackQueryHandler(delete_child, pattern="^delete_"))
+    application.add_handler(CallbackQueryHandler(change_name, pattern="^change_name$"))
+    application.add_handler(CallbackQueryHandler(change_birthdate, pattern="^change_birthdate$"))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    application.run_polling(timeout=3)
+    # Запускаем бота
+    application.run_polling()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
