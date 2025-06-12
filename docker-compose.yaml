@@ -5,7 +5,6 @@ services:
     image: 'web'
     volumes:
     - .:/code
-    network: host
   db:
     image: postgres:12.3
     env_file:
