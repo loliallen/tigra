@@ -1,8 +1,7 @@
 FROM python:3.8-slim-buster
 
 ## install dependencies for psycopg2
-RUN apt-get update \
-    && apt-get -y install libpq-dev gcc make\
+RUN apt-get -y install libpq-dev gcc make\
     && pip install psycopg2
 
 RUN mkdir /code
