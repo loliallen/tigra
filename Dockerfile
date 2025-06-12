@@ -1,7 +1,7 @@
 FROM python:3.8-slim-buster
 
-ENV http_proxy=http:...
-ENV https_proxy=http:...
+ENV http_proxy=http:deb.debian.org/debian
+ENV https_proxy=https:deb.debian.org/debian
 
 ## install dependencies for psycopg2
 RUN apt-get update \
