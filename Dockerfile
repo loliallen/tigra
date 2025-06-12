@@ -1,7 +1,10 @@
 FROM python:3.8-slim-buster
 
+ENV http_proxy=http:...
+ENV https_proxy=http:...
+
 ## install dependencies for psycopg2
-RUN apt-get --allow-releaseinfo-change update \
+RUN apt-get update \
     && apt-get -y install libpq-dev gcc make\
     && pip install psycopg2
 
