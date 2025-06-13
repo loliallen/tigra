@@ -43,6 +43,7 @@ class DjangoClient:
                 user = User.objects.get(phone='8' + phone[1:])
             except User.DoesNotExist:
                 user = User.objects.create(
+                    first_name="-",
                     phone=phone,
                     phone_confirmed=True,  # Подтверждаем телефон, так как он получен через Telegram
                 )
