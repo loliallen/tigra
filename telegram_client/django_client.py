@@ -38,10 +38,14 @@ class DjangoClient:
         try:
             user = User.objects.get(phone=phone)
         except User.DoesNotExist:
-            user = User.objects.create(
-                phone=phone,
-                phone_confirmed=True,  # Подтверждаем телефон, так как он получен через Telegram
-            )
+            try:
+                # в старой базе телефоны начинаются с 8
+                user = User.objects.get(phone='8' + phone[1:])
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    phone=phone,
+                    phone_confirmed=True,  # Подтверждаем телефон, так как он получен через Telegram
+                )
         return SerializableUser(user)
 
     @staticmethod
