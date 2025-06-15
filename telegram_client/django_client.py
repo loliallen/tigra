@@ -44,8 +44,20 @@ class DjangoClient:
     @sync_to_async
     def get_or_create_user(phone: str) -> SerializableUser:
         """Получить или создать пользователя."""
-        user, created = User.objects.get_or_create(phone=phone)
-        # Обновляем объект, чтобы получить связанные данные
+        phone = phone.replace('+', '')  # Убираем + если есть
+        try:
+            user = User.objects.get(phone=phone)
+        except User.DoesNotExist:
+            try:
+                # в старой базе телефоны начинаются с 8
+                user = User.objects.get(phone='8' + phone[1:])
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    first_name="-",
+                    phone=phone,
+                    phone_confirmed=True,
+                    # Подтверждаем телефон, так как он получен через Telegram
+                )
         return SerializableUser(user)
 
     @staticmethod
