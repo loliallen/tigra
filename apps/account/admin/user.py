@@ -19,6 +19,7 @@ from apps.mobile.models import Visit, FreeReason
 from apps.account.admin.tools import model_admin_url
 from apps.account.models import User, Child, Invintation, AccountDocuments
 from utils.admin.filter import DateListFilter, NumericListFilter
+from apps.stores.models import Store
 
 
 class VisitAdminInline(TabularInlinePaginated):
@@ -29,7 +30,7 @@ class VisitAdminInline(TabularInlinePaginated):
     can_delete = False
     ordering = ('date',)
     readonly_fields = ("is_free", "is_active", "free_reason", "staff_")
-    fields = ("date", "duration", "is_free", "free_reason", "staff_", "children")
+    fields = ("date", "duration", "is_free", "free_reason", "staff_", "children", "store")
 
     class Form(forms.ModelForm):
         duration = forms.ChoiceField(choices=(
@@ -51,17 +52,45 @@ class VisitAdminInline(TabularInlinePaginated):
             return self.parent_model.objects.get(pk=resolved.kwargs['object_id'])
         return None
 
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "children":
             user = self.get_parent_object_from_request(request)
             kwargs["queryset"] = Child.objects.filter(my_parent=user)
             kwargs["widget"] = forms.widgets.CheckboxSelectMultiple()
+        elif db_field.name == "store":
+            customer = self.get_parent_object_from_request(request=request)
+            admin = request.user
+            if customer.store or admin.store:
+                # если магазин выбран только у одного либо они совпадают
+                if not (customer.store and admin.store and customer.store != admin.store):
+                    store = customer.store or request.user.store
+                    kwargs["queryset"] = Store.objects.filter(id=store.id)
+                    kwargs["initial"] = store
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset_class = super().get_formset(request, obj, **kwargs)
 
         class FormSet(formset_class):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                for form in self.forms:
+                    # Делаем поле store обязательным для новых визитов
+                    if not form.instance.pk:
+                        form.fields['store'].required = True
+                    customer = kwargs['instance']
+                    admin = request.user
+                    show_all_stores = True
+                    if customer.store or admin.store:
+                        # если магазин выбран только у одного либо они совпадают
+                        if not (customer.store and admin.store and customer.store != admin.store):
+                            store = customer.store or admin.store
+                            if not form.instance.pk:
+                                form.fields['store'].queryset = Store.objects.filter(id=store.id)
+                                show_all_stores = False
+                    if show_all_stores:
+                        form.fields['store'].queryset = Store.objects.all()
+
             def clean(self):
                 # check if more one visit per time
                 new_instance = False
@@ -290,6 +319,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             'last_name',
             'phone',
             'password',
+            'store',
             'agree_for_video',
             'agree_for_sms_notifications',
             'comment_from_staff',

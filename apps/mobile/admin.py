@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from rangefilter.filters import DateRangeFilter
 
 from apps.mobile.logic.selectors.visits import visits_with_end_at
-from apps.mobile.models import Visit
+from apps.mobile.models import Visit, Store
 from apps.account.admin.tools import model_admin_url
 
 
@@ -34,16 +34,21 @@ class ActiveVisitFilter(admin.SimpleListFilter):
             )
 
 class VisitAdmin(admin.ModelAdmin):
-    readonly_fields = ("date", "duration", "is_free", "free_reason", "user_", "staff_")
-    fields = ("date", "duration", "is_free", "free_reason", "user_", "staff_")
-    list_display = ("date", "visit_end", "user_", "children_")
+    readonly_fields = ("date", "duration", "is_free", "free_reason", "user_", "staff_", "store")
+    fields = ("date", "duration", "is_free", "free_reason", "user_", "staff_", "store")
+    list_display = ("date", "visit_end", "user_", "children_", "store")
 
-
-    list_filter = (ActiveVisitFilter, ("date", DateRangeFilter), "is_free", "free_reason")
+    list_filter = (ActiveVisitFilter, ("date", DateRangeFilter), "is_free", "free_reason", "store")
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         return visits_with_end_at(queryset).prefetch_related("children")
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "store":
+            if not request.user.is_superuser and request.user.store:
+                kwargs["queryset"] = Store.objects.filter(id=request.user.store.id)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def visit_end(self, obj: Visit):
         if obj.duration >= 11 * 60 * 60:

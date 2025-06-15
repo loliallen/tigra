@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 
 def now():
@@ -37,6 +36,13 @@ class Visit(models.Model):
         default=None,
         null=True,
         verbose_name="Сотрудник",
+    )
+    store = models.ForeignKey(
+        to='stores.Store',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        verbose_name="Магазин"
     )
     children = models.ManyToManyField(
         verbose_name="Дети",

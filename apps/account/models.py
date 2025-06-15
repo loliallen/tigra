@@ -123,6 +123,14 @@ class User(AbstractUser):
         null=True,
         verbose_name="использованный код приглашения",
     )
+    store = models.ForeignKey(
+        to='stores.Store',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        verbose_name="Магазин",
+        related_name='staff'
+    )
 
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = (

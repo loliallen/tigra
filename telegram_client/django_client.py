@@ -15,6 +15,7 @@ django.setup()
 # Импортируем модели после настройки Django
 from apps.account.models import User, Child
 from apps.mobile.models import Visit
+from apps.stores.models import Store
 
 class SerializableUser:
     """Класс-обертка для сериализации пользователя Django."""
@@ -24,30 +25,37 @@ class SerializableUser:
         self._user = user
 
     @property
+    @sync_to_async
     def user(self):
         if not hasattr(self, '_loaded_user'):
-            self._loaded_user = User.objects.get(id=self.id)
+            self._loaded_user = User.objects.select_related('store').get(id=self.id)
         return self._loaded_user
 
+
 class DjangoClient:
+
+    @staticmethod
+    @sync_to_async
+    def get_stores() -> list:
+        """Получить список всех магазинов."""
+        return list(Store.objects.all())
+
     @staticmethod
     @sync_to_async
     def get_or_create_user(phone: str) -> SerializableUser:
-        """Получить или создать пользователя по номеру телефона."""
-        phone = phone.replace('+', '')  # Убираем + если есть
-        try:
-            user = User.objects.get(phone=phone)
-        except User.DoesNotExist:
-            try:
-                # в старой базе телефоны начинаются с 8
-                user = User.objects.get(phone='8' + phone[1:])
-            except User.DoesNotExist:
-                user = User.objects.create(
-                    first_name="-",
-                    phone=phone,
-                    phone_confirmed=True,  # Подтверждаем телефон, так как он получен через Telegram
-                )
+        """Получить или создать пользователя."""
+        user, created = User.objects.get_or_create(phone=phone)
+        # Обновляем объект, чтобы получить связанные данные
         return SerializableUser(user)
+
+    @staticmethod
+    @sync_to_async
+    def update_user_store(user: SerializableUser, store_id: int) -> SerializableUser:
+        """Обновить магазин пользователя."""
+        user_obj = User.objects.get(id=user.id)
+        user_obj.store_id = store_id
+        user_obj.save()
+        return SerializableUser(user_obj)
 
     @staticmethod
     @sync_to_async
@@ -93,18 +101,19 @@ class DjangoClient:
 
     @staticmethod
     @sync_to_async
-    def create_visit(user: SerializableUser, duration_hours: int, children_ids: list) -> Visit:
+    def create_visit(user: SerializableUser, duration_hours: int, children_ids: list, store_id: int = None) -> Visit:
         """Создать новое посещение."""
         visit = Visit.objects.create(
             user_id=user.id,
             date=datetime.now(),
             duration=duration_hours * 3600,  # Переводим часы в секунды
-            is_active=True
+            is_active=True,
+            store_id=store_id
         )
         if children_ids:
             visit.children.set(Child.objects.filter(id__in=children_ids))
         # Обновляем объект, чтобы получить связанные данные
-        visit = Visit.objects.prefetch_related('children').get(id=visit.id)
+        visit = Visit.objects.select_related('store').prefetch_related('children').get(id=visit.id)
         return visit
 
     @staticmethod

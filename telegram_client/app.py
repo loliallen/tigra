@@ -74,12 +74,49 @@ async def authorize(update: Update, context: ContextTypes.DEFAULT_TYPE):
         django_user = await django_client.get_or_create_user(contact.phone_number)
         context.user_data["django_user"] = django_user
         
-        await update.message.reply_text(
-            "Вы успешно авторизовались!",
-            reply_markup=get_main_menu()
-        )
+        # Проверяем, есть ли у пользователя привязанный магазин
+        if not (await django_user.user).store:
+            # Получаем список магазинов
+            stores = await django_client.get_stores()
+            if not stores:
+                await update.message.reply_text("Нет доступных магазинов.")
+                return
+            
+            # Создаем кнопки для выбора магазина
+            store_buttons = [
+                [InlineKeyboardButton(
+                    store.address,
+                    callback_data=f"register_store_{store.id}"
+                )]
+                for store in stores
+            ]
+            
+            await update.message.reply_text(
+                "Выберите точку:",
+                reply_markup=InlineKeyboardMarkup(store_buttons)
+            )
+        else:
+            await update.message.reply_text(
+                "Вы успешно авторизовались!",
+                reply_markup=get_main_menu()
+            )
     else:
         await update.message.reply_text("Пожалуйста, отправьте ваш номер телефона.")
+
+async def select_register_store(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработка выбора магазина при регистрации."""
+    query = update.callback_query
+    store_id = int(query.data.split('_')[2])
+    
+    # Обновляем магазин пользователя
+    django_user = context.user_data.get("django_user")
+    django_user = await django_client.update_user_store(django_user, store_id)
+    context.user_data["django_user"] = django_user
+    
+    await query.message.reply_text(
+        "Вы успешно авторизовались!",
+        reply_markup=get_main_menu()
+    )
 
 async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Главное меню."""
@@ -316,7 +353,7 @@ async def select_participants(update: Update, context: ContextTypes.DEFAULT_TYPE
         slot = context.user_data["selected_slot"]
         children_ids = context.user_data["selected_children"]
         
-        visit = await django_client.create_visit(django_user, slot, children_ids)
+        visit = await django_client.create_visit(django_user, slot, children_ids, (await django_user.user).store.id)
         children_names = await django_client.get_visit_children_names(visit)
         
         # Очищаем временные данные
@@ -327,6 +364,7 @@ async def select_participants(update: Update, context: ContextTypes.DEFAULT_TYPE
             f"Посещение успешно создано!\n"
             f"Дата: {visit.date.strftime('%d.%m.%Y %H:%M')}\n"
             f"Продолжительность: {visit.duration // 3600} ч.\n"
+            f"Магазин: {visit.store.address}\n"
             f"Участники: {', '.join(children_names)}",
             reply_markup=get_main_menu()
         )
@@ -369,6 +407,7 @@ def main():
     application.add_handler(MessageHandler(filters.CONTACT, authorize))
     application.add_handler(CallbackQueryHandler(select_slot, pattern="^slot_"))
     application.add_handler(CallbackQueryHandler(select_participants, pattern="^(child_|finish_)"))
+    application.add_handler(CallbackQueryHandler(select_register_store, pattern="^register_store_"))
     application.add_handler(CallbackQueryHandler(edit_child, pattern="^edit_"))
     application.add_handler(CallbackQueryHandler(delete_child, pattern="^delete_"))
     application.add_handler(CallbackQueryHandler(change_name, pattern="^change_name$"))
