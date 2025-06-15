@@ -7,7 +7,8 @@ from django.utils.translation import gettext_lazy as _
 from rangefilter.filters import DateRangeFilter
 
 from apps.mobile.logic.selectors.visits import visits_with_end_at
-from apps.mobile.models import Visit, Store
+from apps.mobile.models import Visit
+from apps.stores.models import Store
 from apps.account.admin.tools import model_admin_url
 
 
