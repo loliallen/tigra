@@ -52,6 +52,8 @@ class VisitAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def visit_end(self, obj: Visit):
+        if obj.duration is None:
+            return '-'
         if obj.duration >= 11 * 60 * 60:
             return 'до конца дня'
         return localtime(obj.end_at).time()

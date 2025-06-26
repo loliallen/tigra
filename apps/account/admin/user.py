@@ -75,10 +75,11 @@ class VisitAdminInline(TabularInlinePaginated):
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
                 for form in self.forms:
+                    customer = kwargs['instance']
+                    form.fields["children"].queryset = Child.objects.filter(my_parent=customer)
                     # Делаем поле store обязательным для новых визитов
                     if not form.instance.pk:
                         form.fields['store'].required = True
-                    customer = kwargs['instance']
                     admin = request.user
                     show_all_stores = True
                     if customer.store or admin.store:

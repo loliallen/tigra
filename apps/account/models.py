@@ -52,7 +52,10 @@ class Child(models.Model):
     )
 
     def __str__(self):
-        return f"{self.name} ({self.my_parent.last_name} {self.my_parent.first_name})"
+        # if self.my_parent:
+        #     return f"{self.name} ({self.my_parent.last_name} {self.my_parent.first_name})"
+        # else:
+        return f"{self.name}"
 
     def years(self) -> typing.Optional[int]:
         if self.birth_date is None:
