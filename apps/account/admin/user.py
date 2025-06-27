@@ -52,12 +52,15 @@ class VisitAdminInline(TabularInlinePaginated):
             return self.parent_model.objects.get(pk=resolved.kwargs['object_id'])
         return None
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "children":
             user = self.get_parent_object_from_request(request)
             kwargs["queryset"] = Child.objects.filter(my_parent=user)
             kwargs["widget"] = forms.widgets.CheckboxSelectMultiple()
-        elif db_field.name == "store":
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "store":
             customer = self.get_parent_object_from_request(request=request)
             admin = request.user
             if customer.store or admin.store:
