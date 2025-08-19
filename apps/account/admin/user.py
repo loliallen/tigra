@@ -95,7 +95,7 @@ class VisitAdminInline(TabularInlinePaginated):
                                 show_all_stores = False
                     if show_all_stores:
                         form.fields['store'].queryset = Store.objects.all()
-                    if not form.initial['is_confirmed']:
+                    if not form.initial.get('is_confirmed'):
                         form.fields['is_confirmed'].disabled = False
 
             def clean(self):
