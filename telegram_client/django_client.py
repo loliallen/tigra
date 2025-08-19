@@ -94,26 +94,6 @@ class DjangoClient:
 
     @staticmethod
     @sync_to_async
-    def update_child(child_id: int, name: str = None, birth_date_str: str = None) -> Child:
-        """Обновить данные ребенка."""
-        child = Child.objects.get(id=child_id)
-        if name:
-            child.name = name
-        if birth_date_str:
-            birth_date = datetime.strptime(birth_date_str, "%d.%m.%Y").date()
-            child.birth_date = birth_date
-            child.age = (datetime.now().date() - birth_date).days // 365
-        child.save()
-        return child
-
-    @staticmethod
-    @sync_to_async
-    def delete_child(child_id: int):
-        """Удалить ребенка."""
-        Child.objects.filter(id=child_id).delete()
-
-    @staticmethod
-    @sync_to_async
     def create_visit(user: SerializableUser, duration_hours: int, children_ids: list, store_id: int = None) -> Visit:
         """Создать новое посещение."""
         visit = Visit(

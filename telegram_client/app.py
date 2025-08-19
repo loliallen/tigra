@@ -28,9 +28,10 @@ django_client = DjangoClient()
 # Функция для формирования главного меню
 def get_main_menu():
     return ReplyKeyboardMarkup(
-        [["Создать посещение", "Список посещений"],
-         ["Добавить ребенка", "Список детей",],
-         ["Изменить ребенка", "Удалить ребенка"]],
+        [
+            ["Создать посещение", "Список посещений"],
+            ["Добавить ребенка"]
+         ],
         resize_keyboard=True
     )
 
@@ -171,49 +172,6 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif text == "Добавить ребенка":
         await update.message.reply_text("Введите имя ребенка:")
         context.user_data["adding_child"] = True
-    elif text == "Список детей":
-        children = await django_client.get_user_children(django_user)
-        if children:
-            children_text = "\n".join([
-                f"{i + 1}. {child.name} "
-                f"(Дата рождения: {child.birth_date.strftime('%d.%m.%Y')})"
-                for i, child in enumerate(children)
-            ])
-        else:
-            children_text = "У вас пока нет добавленных детей."
-        await update.message.reply_text(children_text)
-    elif text == "Изменить ребенка":
-        children = await django_client.get_user_children(django_user)
-        if not children:
-            await update.message.reply_text("У вас нет детей для изменения.")
-        else:
-            child_buttons = [
-                [InlineKeyboardButton(
-                    f"{child.name} (Дата рождения: {child.birth_date.strftime('%d.%m.%Y')})",
-                    callback_data=f"edit_{child.id}"
-                )]
-                for child in children
-            ]
-            await update.message.reply_text(
-                "Выберите ребенка для изменения:",
-                reply_markup=InlineKeyboardMarkup(child_buttons)
-            )
-    elif text == "Удалить ребенка":
-        children = await django_client.get_user_children(django_user)
-        if not children:
-            await update.message.reply_text("У вас нет детей для удаления.")
-        else:
-            child_buttons = [
-                [InlineKeyboardButton(
-                    f"{child.name} (Дата рождения: {child.birth_date.strftime('%d.%m.%Y')})",
-                    callback_data=f"delete_{child.id}"
-                )]
-                for child in children
-            ]
-            await update.message.reply_text(
-                "Выберите ребенка для удаления:",
-                reply_markup=InlineKeyboardMarkup(child_buttons)
-            )
     else:
         await update.message.reply_text("Пожалуйста, выберите действие из меню.", reply_markup=get_main_menu())
 
@@ -248,75 +206,6 @@ async def add_child(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except ValueError:
                 await update.message.reply_text("Неверный формат даты. Попробуйте еще раз (ДД.ММ.ГГГГ):")
 
-async def edit_child(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработка выбора ребенка для редактирования."""
-    query = update.callback_query
-    child_id = int(query.data.split('_')[1])
-    context.user_data["edit_child_id"] = child_id
-    
-    await query.message.reply_text(
-        "Что вы хотите изменить?",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("Имя", callback_data="change_name"),
-             InlineKeyboardButton("Дату рождения", callback_data="change_birthdate")]
-        ])
-    )
-
-async def change_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Запрос нового имени."""
-    query = update.callback_query
-    context.user_data["edit_field"] = "name"
-    await query.message.reply_text("Введите новое имя:")
-
-async def receive_new_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработка нового имени."""
-    new_name = update.message.text
-    child_id = context.user_data["edit_child_id"]
-    
-    child = await django_client.update_child(child_id, name=new_name)
-    
-    del context.user_data["edit_child_id"]
-    del context.user_data["edit_field"]
-    
-    await update.message.reply_text(
-        f"Имя успешно изменено на {child.name}!",
-        reply_markup=get_main_menu()
-    )
-
-async def change_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Запрос новой даты рождения."""
-    query = update.callback_query
-    context.user_data["edit_field"] = "birthdate"
-    await query.message.reply_text("Введите новую дату рождения в формате ДД.ММ.ГГГГ:")
-
-async def receive_new_birthdate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработка новой даты рождения."""
-    new_birthdate = update.message.text
-    child_id = context.user_data["edit_child_id"]
-    
-    try:
-        child = await django_client.update_child(child_id, birth_date_str=new_birthdate)
-        del context.user_data["edit_child_id"]
-        del context.user_data["edit_field"]
-        
-        await update.message.reply_text(
-            f"Дата рождения успешно изменена на {child.birth_date.strftime('%d.%m.%Y')}!",
-            reply_markup=get_main_menu()
-        )
-    except ValueError:
-        await update.message.reply_text("Неверный формат даты. Попробуйте еще раз (ДД.ММ.ГГГГ):")
-
-async def delete_child(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Удаление ребенка."""
-    query = update.callback_query
-    child_id = int(query.data.split('_')[1])
-    
-    await django_client.delete_child(child_id)
-    
-    await query.message.reply_text(
-        "Ребенок успешно удален!",
-        reply_markup=get_main_menu()
-    )
 
 async def select_slot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработка выбора временного слота."""
@@ -421,10 +310,6 @@ def main():
     application.add_handler(CallbackQueryHandler(select_slot, pattern="^slot_"))
     application.add_handler(CallbackQueryHandler(select_participants, pattern="^(child_|finish_)"))
     application.add_handler(CallbackQueryHandler(select_register_store, pattern="^register_store_"))
-    application.add_handler(CallbackQueryHandler(edit_child, pattern="^edit_"))
-    application.add_handler(CallbackQueryHandler(delete_child, pattern="^delete_"))
-    application.add_handler(CallbackQueryHandler(change_name, pattern="^change_name$"))
-    application.add_handler(CallbackQueryHandler(change_birthdate, pattern="^change_birthdate$"))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     # Запускаем бота
