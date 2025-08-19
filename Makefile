@@ -21,9 +21,9 @@ build:
 
 release:
 	make build
-	docker compose stop web_run celery celery_beat
+	docker compose stop web_run celery telegram_bot_run celery_beat
 	make clear_space
-	docker compose up -d web_run celery celery_beat
+	docker compose up -d web_run celery telegram_bot_run celery_beat
 
 release_bot:
 	make build
