@@ -19,6 +19,7 @@ class Visit(models.Model):
     free_reason = models.CharField(max_length=255, choices=FreeReason.choices, null=True,
                                    verbose_name="Причина бесплатного визита")
     is_active = models.BooleanField(default=True)  # deprecated
+    is_confirmed = models.BooleanField(default=True, verbose_name="Подтвержденное?")
     user = models.ForeignKey(
         to='account.User',
         related_name='visits_user',

@@ -68,3 +68,18 @@ services:
     depends_on:
       - rabbitmq
       - db
+
+  celery_beat:
+    image: web
+    command: "celery -A server.tasks beat --loglevel=INFO"
+    volumes:
+      - .:/code
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=server.settings
+      - CELERY_RABBIT_ADDRESS=amqp://rabbitmq:rabbitmq@rabbitmq//
+      - DB_HOST=db
+    depends_on:
+      - rabbitmq
+      - db

@@ -30,7 +30,7 @@ class VisitAdminInline(TabularInlinePaginated):
     can_delete = False
     ordering = ('date',)
     readonly_fields = ("is_free", "is_active", "free_reason", "staff_")
-    fields = ("date", "duration", "is_free", "free_reason", "staff_", "children", "store")
+    fields = ("date", "duration", "is_free", "free_reason", "is_confirmed", "staff_", "children", "store")
 
     class Form(forms.ModelForm):
         duration = forms.ChoiceField(choices=(
@@ -39,6 +39,7 @@ class VisitAdminInline(TabularInlinePaginated):
             (2 * 60 * 60, '2 часа'),
             (11 * 60 * 60, 'до конца дня'),
         ),)
+        is_confirmed = forms.BooleanField(initial=True, required=False, disabled=True)
 
     form = Form
 
@@ -94,6 +95,8 @@ class VisitAdminInline(TabularInlinePaginated):
                                 show_all_stores = False
                     if show_all_stores:
                         form.fields['store'].queryset = Store.objects.all()
+                    if not form.initial['is_confirmed']:
+                        form.fields['is_confirmed'].disabled = False
 
             def clean(self):
                 # check if more one visit per time

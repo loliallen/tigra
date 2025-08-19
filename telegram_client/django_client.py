@@ -120,7 +120,8 @@ class DjangoClient:
             date=datetime.now(),
             duration=duration_hours * 3600,  # Переводим часы в секунды
             is_active=True,
-            store_id=store_id
+            store_id=store_id,
+            is_confirmed=False,
         )
         if children_ids:
             visit.children.set(Child.objects.filter(id__in=children_ids))
