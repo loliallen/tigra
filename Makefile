@@ -32,13 +32,13 @@ release_bot:
 	docker compose up -d telegram_bot_run
 
 dump:
-	docker exec -it tigra-db_1 sh -c "pg_dump db > dump.sql"
-	docker cp tigra-db_1:/dump.sql dump.sql
+	docker exec -it tigra-db-1 sh -c "pg_dump db > dump.sql"
+	docker cp tigra-db-1:/dump.sql dump.sql
 	curl -X POST "https://api.telegram.org/bot7045683304:AAFlrPX-KB798xVHvPbpUnd5cUIbrQTjLs0/sendDocument?chat_id=-4597530598" --form "document=@dump.sql;type=text/csv" -H "Content-Type: multipart/form-data"
 
 load_dump:
-	docker cp ~/dump.sql tigra_db_1:/dump.sql
-	docker exec -it tigra_db_1 sh -c "psql db < dump.sql"
+	docker cp ~/dump.sql tigra-db-1:/dump.sql
+	docker exec -it tigra-db-1 sh -c "psql db < dump.sql"
 
 rm_dump:
 	rm media/dump.sql
