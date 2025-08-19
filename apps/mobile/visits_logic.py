@@ -1,6 +1,8 @@
+import datetime
 from typing import Optional, Tuple
 
 from django.db.models import Count
+from django.utils.timezone import localtime
 
 from apps.mobile.models import Visit, FreeReason
 
@@ -19,10 +21,14 @@ def check_not_used_invite(user) -> Optional['Invintation']:
 
 
 def get_visits_to_count(user):
-    last_free = user.visits_user.filter(free_reason=FreeReason.COUNT).last()
-    visits = user.visits_user.filter(is_free=False)
+    last_free = user.visits_user.filter(free_reason=FreeReason.COUNT, is_confirmed=True).last()
+    visits = user.visits_user.filter(is_free=False, is_confirmed=True)
+    days_ago_30 = localtime() - datetime.timedelta(days=30)
     if last_free:
-        visits = visits.filter(date__gt=last_free.date)
+        after = max(days_ago_30, last_free.date)
+    else:
+        after = days_ago_30
+    visits = visits.filter(date__gt=after)
     return visits
 
 

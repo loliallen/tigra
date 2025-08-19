@@ -132,13 +132,26 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return await receive_new_birthdate(update, context)
 
     if text == "Создать посещение":
+        buttons = [
+            [
+                InlineKeyboardButton("1 час", callback_data="slot_1"),
+                InlineKeyboardButton("Сертификат", callback_data="slot_2"),
+                InlineKeyboardButton("3 часа", callback_data="slot_3")
+            ]
+        ]
+        is_free_visit = await django_client.user_has_free_visit(django_user)
+        if is_free_visit:
+            buttons.append(
+                [InlineKeyboardButton("Использовать бонусное посещение", callback_data="slot_1")]
+            )
+        cnt_to_free_visit = await django_client.user_count_to_free_visit(django_user)
+        if is_free_visit:
+            text = "Выберите слот времени:"
+        else:
+            text = f"Выберите слот времени (до бонусного визита {cnt_to_free_visit} посещения):"
         await update.message.reply_text(
-            "Выберите слот времени:",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("1 час", callback_data="slot_1"),
-                 InlineKeyboardButton("2 часа", callback_data="slot_2"),
-                 InlineKeyboardButton("3 часа", callback_data="slot_3")]
-            ])
+            text,
+            reply_markup=InlineKeyboardMarkup(buttons)
         )
     elif text == "Список посещений":
         visits = await django_client.get_user_visits(django_user)

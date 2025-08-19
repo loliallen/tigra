@@ -1,9 +1,9 @@
 import os
 import sys
 import django
-from datetime import datetime, timedelta
+from datetime import datetime
 from asgiref.sync import sync_to_async
-from django.db.models import Prefetch
+from django.utils.timezone import localtime
 
 # Добавляем путь к Django проекту
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,6 +16,7 @@ django.setup()
 from apps.account.models import User, Child
 from apps.mobile.models import Visit
 from apps.stores.models import Store
+from apps.mobile.visits_logic import count_to_free_visit, set_visit_if_free
 
 class SerializableUser:
     """Класс-обертка для сериализации пользователя Django."""
@@ -115,7 +116,7 @@ class DjangoClient:
     @sync_to_async
     def create_visit(user: SerializableUser, duration_hours: int, children_ids: list, store_id: int = None) -> Visit:
         """Создать новое посещение."""
-        visit = Visit.objects.create(
+        visit = Visit(
             user_id=user.id,
             date=datetime.now(),
             duration=duration_hours * 3600,  # Переводим часы в секунды
@@ -123,6 +124,8 @@ class DjangoClient:
             store_id=store_id,
             is_confirmed=False,
         )
+        set_visit_if_free(visit)
+        visit.save()
         if children_ids:
             visit.children.set(Child.objects.filter(id__in=children_ids))
         # Обновляем объект, чтобы получить связанные данные
@@ -136,6 +139,30 @@ class DjangoClient:
         return list(Visit.objects.filter(user_id=user.id)
                    .prefetch_related('children')
                    .order_by('-date'))
+
+    @staticmethod
+    @sync_to_async
+    def user_count_to_free_visit(user: SerializableUser) -> str:
+        """Сколько еще нужно до бесплатного визита."""
+        user = User.objects.get(id=user.id)
+        cnt = count_to_free_visit(user)[0]
+        if cnt == 0:
+            last_visit = Visit.objects.filter(user_id=user.id).last()
+            if (localtime() - last_visit.date).days < 10:
+                return 1
+        return cnt
+
+    @staticmethod
+    @sync_to_async
+    def user_has_free_visit(user: SerializableUser) -> bool:
+        """Есть ли у пользователя бесплатный визит."""
+        user = User.objects.get(id=user.id)
+        if count_to_free_visit(user)[0] == 0:
+            last_visit = Visit.objects.filter(user_id=user.id).last()
+            if (localtime() - last_visit.date).days < 10:
+                return True
+        return False
+
 
     @staticmethod
     @sync_to_async
