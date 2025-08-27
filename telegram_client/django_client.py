@@ -99,7 +99,7 @@ class DjangoClient:
         visit = Visit(
             user_id=user.id,
             date=datetime.now(),
-            duration=duration_hours * 3600,  # Переводим часы в секунды
+            duration=duration_hours * 60,  # Переводим минуты в секунды
             is_active=True,
             store_id=store_id,
             is_confirmed=False,

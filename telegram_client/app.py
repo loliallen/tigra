@@ -2,6 +2,7 @@ import logging
 import os
 from pathlib import Path
 
+from django.utils.timezone import localtime
 from telegram import (
     Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton,
     InlineKeyboardMarkup
@@ -126,24 +127,18 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if context.user_data.get("adding_child"):
         return await add_child(update, context)
-    if context.user_data.get("edit_child_index") is not None:
-        if context.user_data.get("edit_field") == "name":
-            return await receive_new_name(update, context)
-        if context.user_data.get("edit_field") == "birthdate":
-            return await receive_new_birthdate(update, context)
-
     if text == "Создать посещение":
         buttons = [
             [
-                InlineKeyboardButton("1 час", callback_data="slot_1"),
-                InlineKeyboardButton("Сертификат", callback_data="slot_2"),
-                InlineKeyboardButton("3 часа", callback_data="slot_3")
+                InlineKeyboardButton("1 час", callback_data="slot_60"),
+                InlineKeyboardButton("Сертификат", callback_data="slot_120"),
+                InlineKeyboardButton("3 часа", callback_data="slot_180")
             ]
         ]
         is_free_visit = await django_client.user_has_free_visit(django_user)
         if is_free_visit:
             buttons.append(
-                [InlineKeyboardButton("Использовать бонусное посещение", callback_data="slot_1")]
+                [InlineKeyboardButton("Использовать бонусное посещение", callback_data="slot_30")]
             )
         cnt_to_free_visit = await django_client.user_count_to_free_visit(django_user)
         if is_free_visit:
@@ -261,12 +256,17 @@ async def select_participants(update: Update, context: ContextTypes.DEFAULT_TYPE
         # Очищаем временные данные
         del context.user_data["selected_slot"]
         del context.user_data["selected_children"]
-        
+
+        duration = visit.duration // 3600
+        if duration < 1:
+            duration_str = f"{int(duration*60)} м."
+        else:
+            duration_str = f"{duration} ч."
         await query.message.reply_text(
             f"Посещение успешно создано!\n"
-            f"Дата: {visit.date.strftime('%d.%m.%Y %H:%M')}\n"
-            f"Продолжительность: {visit.duration // 3600} ч.\n"
-            f"Магазин: {visit.store.address}\n"
+            f"Дата: {localtime(visit.date).strftime('%d.%m.%Y %H:%M')}\n"
+            f"Продолжительность: {duration_str}\n"
+            f"Игровая площадка: {visit.store.address}\n"
             f"Участники: {', '.join(children_names)}",
             reply_markup=get_main_menu()
         )
