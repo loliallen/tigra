@@ -4,10 +4,7 @@
 pip install pip-tools
 make install-dev
 ```
-2) Cоздать в корне `.env` файл на основе `.env.example` с переменными:
-   - `BOT_TOKEN` - токен Telegram бота
-   - `BOT_CHAT_ID` - ID чата для отправки дампов БД
-   - остальные переменные из `.env.example`
+2) Cоздать в корне `.env` файл на основе `.env.example`
 3) Cоздать в корне `creds.json` (доступы в firebase,
 генерируются в [консоли firebase](https://console.firebase.google.com)
 в разделе `Project Settings` -> `Service Account` -> `Generate 
@@ -31,9 +28,7 @@ python manage.py runserver 0.0.0.0:8000
 git clone ...
 ```
 2) Cоздать в корне `.env` файл на основе `.env.example` 
-и придумать стойкие пароли и секретные ключи:
-   - `BOT_TOKEN` - токен Telegram бота для дампов БД
-   - `BOT_CHAT_ID` - ID чата для отправки дампов
+и придумать стойкие пароли и секретные ключи
 3) Cоздать в корне `creds.json` - доступы в firebase,
 генерируются в [консоли firebase](https://console.firebase.google.com)
 в разделе `Project Settings` -> `Service Account` -> `Generate 
