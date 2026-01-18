@@ -4,7 +4,10 @@
 pip install pip-tools
 make install-dev
 ```
-2) Cоздать в корне `.env` файл на основе `.env.example`
+2) Cоздать в корне `.env` файл на основе `.env.example` с переменными:
+   - `BOT_TOKEN` - токен Telegram бота
+   - `BOT_CHAT_ID` - ID чата для отправки дампов БД
+   - остальные переменные из `.env.example`
 3) Cоздать в корне `creds.json` (доступы в firebase,
 генерируются в [консоли firebase](https://console.firebase.google.com)
 в разделе `Project Settings` -> `Service Account` -> `Generate 
@@ -28,7 +31,9 @@ python manage.py runserver 0.0.0.0:8000
 git clone ...
 ```
 2) Cоздать в корне `.env` файл на основе `.env.example` 
-и придумать стойкие пароли и секретные ключи
+и придумать стойкие пароли и секретные ключи:
+   - `BOT_TOKEN` - токен Telegram бота для дампов БД
+   - `BOT_CHAT_ID` - ID чата для отправки дампов
 3) Cоздать в корне `creds.json` - доступы в firebase,
 генерируются в [консоли firebase](https://console.firebase.google.com)
 в разделе `Project Settings` -> `Service Account` -> `Generate 
@@ -41,6 +46,52 @@ make release
 ## Обновить версию на сервере
 ```bash
 make release
+```
+
+## Ручной дамп базы данных
+Убедитесь что в `.env` установлены переменные:
+```
+BOT_TOKEN=your_bot_token
+BOT_CHAT_ID=your_chat_id
+```
+```bash
+make dump
+```
+
+## Автоматический дамп базы данных через cron
+
+Для автоматического дампа базы данных используйте **cron** — встроенный планировщик Linux/Unix.
+
+Убедитесь что в `.env` установлены переменные:
+```
+BOT_TOKEN=your_bot_token
+BOT_CHAT_ID=your_chat_id
+```
+
+Отредактируйте crontab на сервере:
+```bash
+crontab -e
+```
+
+Добавьте строку для запуска каждую пятницу в 22:08:
+```
+8 22 * * 5 /root/tigra/scripts/backup.sh >> /var/log/tigra_backup.log 2>&1
+```
+
+Выдать права:
+```
+chmod +x scripts/backup.sh
+```
+
+Проверить и управлять cron задачами:
+
+```bash
+# Просмотреть все задачи
+crontab -l
+# Удалить crontab
+crontab -r
+# Просмотреть логи (если существуют)
+tail -f /var/log/tigra_backup.log
 ```
 
 ## Если заканчивается место
