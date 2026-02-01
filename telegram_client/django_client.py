@@ -57,6 +57,7 @@ class DjangoClient:
                     first_name="-",
                     phone=phone,
                     phone_confirmed=True,
+                    source_platform='telegram_bot',
                     # Подтверждаем телефон, так как он получен через Telegram
                 )
         return SerializableUser(user)

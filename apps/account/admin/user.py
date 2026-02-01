@@ -249,7 +249,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         'last_mobile_app_visit_date', 'last_admin_activity_date',
     )
     list_display = (
-        "fio", "phone", "visits_count", "last_visit", "last_end", "child_name"
+        "fio", "phone", "visits_count", "last_visit", "last_end", "child_name", "source_platform"
     )
     list_filter = (
         ActiveVisitFilter,
@@ -259,7 +259,8 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         ("last_login", DateRangeFilter),
         "is_staff",
         "groups",
-        VisitsCountGreaterFilter
+        VisitsCountGreaterFilter,
+        "source_platform"
     )
     actions = [send_push_selected_objects]
     changelist_actions = ('make_report',)
@@ -327,6 +328,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             'phone',
             'password',
             'store',
+            'source_platform',
             'agree_for_video',
             'agree_for_sms_notifications',
             'comment_from_staff',

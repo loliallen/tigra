@@ -33,6 +33,12 @@ SEX_CHOICES = (
     ('M', 'Мужской'),
 )
 
+PLATFORM_CHOICES = (
+    ('mobile_application', 'Мобальное приложение'),
+    ('admin_site', 'Админка'),
+    ('telegram_bot', 'Телеграм бот'),
+)
+
 class Child(models.Model):
     class Meta:
         verbose_name = 'Ребенок'
@@ -112,6 +118,7 @@ class User(AbstractUser):
     phone_code = models.CharField(default=createCodeDigits6, blank=True, unique=True, max_length=6, verbose_name='проверочный код телефона')
     phone_confirmed = models.BooleanField(default=False, blank=True, verbose_name='телефон подтвержден')
     device_token = models.TextField(default="", verbose_name="токен устройства для отправки пушей")
+    source_platform = models.CharField(max_length=255, choices=PLATFORM_CHOICES, default='admin_site', verbose_name='Платформа источник')
     last_mobile_app_visit_date = models.DateField(
         blank=True, null=True, verbose_name='Дата последнего визита в приложение'
     )
