@@ -115,6 +115,9 @@ class User(AbstractUser):
     last_mobile_app_visit_date = models.DateField(
         blank=True, null=True, verbose_name='Дата последнего визита в приложение'
     )
+    last_admin_activity_date = models.DateTimeField(
+        blank=True, null=True, verbose_name='Дата последнего действия в админке'
+    )
     agree_for_video = models.BooleanField(verbose_name="Согласие на видеозапись", default=True)
     agree_for_sms_notifications = models.BooleanField(verbose_name="Согласие смс уведомления", default=True)
     comment_from_staff = models.TextField(verbose_name="Комментарий сотрудника", blank=True, null=True)

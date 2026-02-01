@@ -67,6 +67,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'apps.account.middleware.RemoveTokenFromCheckInvinationMiddleware',
     'apps.account.middleware.UpdateLastVisitMiddleware',
+    'apps.account.middleware.CheckLastAdminActivityMiddleware',
 ]
 
 ROOT_URLCONF = 'server.urls'
