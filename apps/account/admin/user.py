@@ -246,10 +246,10 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     readonly_fields = (
         'date_joined', 'last_login', 'used_invintation_', 'phone_code',
         'phone_confirmed', 'device_token', 'count_to_free_visit', 'free_reason',
-        'last_mobile_app_visit_date', 'last_admin_activity_date',
+        'last_mobile_app_visit_date', 'last_admin_activity_date', 'last_telegram_bot_visit_date'
     )
     list_display = (
-        "fio", "phone", "visits_count", "last_visit", "last_end", "child_name", "source_platform"
+        "fio", "phone", "visits_count", "last_visit", "last_end", "child_name", "source_platform", "last_telegram_bot_visit_date"
     )
     list_filter = (
         ActiveVisitFilter,
@@ -339,6 +339,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             'used_invintation_',
             'date_joined',
             'last_mobile_app_visit_date',
+            'last_telegram_bot_visit_date',
             'last_admin_activity_date',
             'last_login',
             'count_to_free_visit',

@@ -122,6 +122,9 @@ class User(AbstractUser):
     last_mobile_app_visit_date = models.DateField(
         blank=True, null=True, verbose_name='Дата последнего визита в приложение'
     )
+    last_telegram_bot_visit_date = models.DateField(
+        blank=True, null=True, verbose_name='Дата последнего визита в телеграм бот'
+    )
     last_admin_activity_date = models.DateTimeField(
         blank=True, null=True, verbose_name='Дата последнего действия в админке'
     )

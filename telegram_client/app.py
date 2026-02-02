@@ -125,6 +125,7 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     django_user = context.user_data.get("django_user")
 
+    await django_client.update_last_telegram_bot_visit_date(django_user)
     if context.user_data.get("adding_child"):
         return await add_child(update, context)
     if text == "Создать посещение":

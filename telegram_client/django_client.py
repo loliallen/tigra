@@ -155,4 +155,13 @@ class DjangoClient:
     @sync_to_async
     def get_visit_children_names(visit: Visit) -> list:
         """Получить список имен детей для посещения."""
-        return [child.name for child in visit.children.all()] 
+        return [child.name for child in visit.children.all()]
+
+    @staticmethod
+    @sync_to_async
+    def update_last_telegram_bot_visit_date(user: SerializableUser) -> None:
+        user = User.objects.get(id=user.id)
+        today = localtime().date()
+        if user.last_telegram_bot_visit_date is None or user.last_telegram_bot_visit_date < today:
+            user.last_telegram_bot_visit_date = today
+            user.save()
