@@ -73,7 +73,11 @@ async def authorize(update: Update, context: ContextTypes.DEFAULT_TYPE):
     contact = update.message.contact
     if contact:
         # Получаем или создаем пользователя в Django
-        django_user = await django_client.get_or_create_user(contact.phone_number)
+        django_user = await django_client.get_or_create_user(
+            contact.phone_number,
+            contact.first_name,
+            contact.last_name
+        )
         context.user_data["django_user"] = django_user
         
         # Проверяем, есть ли у пользователя привязанный магазин

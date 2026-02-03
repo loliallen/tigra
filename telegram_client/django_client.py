@@ -1,5 +1,7 @@
 import os
 import sys
+import typing
+
 import django
 from datetime import datetime
 from asgiref.sync import sync_to_async
@@ -43,9 +45,15 @@ class DjangoClient:
 
     @staticmethod
     @sync_to_async
-    def get_or_create_user(phone: str) -> SerializableUser:
+    def get_or_create_user(
+            phone: str,
+            first_name: typing.Optional[str] = None,
+            last_name: typing.Optional[str] = None
+    ) -> SerializableUser:
         """Получить или создать пользователя."""
         phone = phone.replace('+', '')  # Убираем + если есть
+        first_name = first_name or '-'
+        last_name = last_name or '-'
         try:
             user = User.objects.get(phone=phone)
         except User.DoesNotExist:
@@ -54,7 +62,8 @@ class DjangoClient:
                 user = User.objects.get(phone='8' + phone[1:])
             except User.DoesNotExist:
                 user = User.objects.create(
-                    first_name="-",
+                    first_name=first_name,
+                    last_name=last_name,
                     phone=phone,
                     phone_confirmed=True,
                     source_platform='telegram_bot',
