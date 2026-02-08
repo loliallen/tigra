@@ -191,7 +191,7 @@ class VisitsCountGreaterFilter(NumericListFilter):
 
 class LastVisitFilter(DateListFilter):
     title = 'Дата последнего визита'
-    parameter_name = 'last_visit'
+    parameter_name = 'last_visit_date'
 
 
 class ActiveVisitFilter(admin.SimpleListFilter):
@@ -249,7 +249,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         'last_mobile_app_visit_date', 'last_admin_activity_date', 'last_telegram_bot_visit_date'
     )
     list_display = (
-        "fio", "phone", "visits_count", "last_visit", "last_end", "child_name", "source_platform", "last_telegram_bot_visit_date"
+        "fio", "phone", "visits_count", "last_visit_date", "last_end", "child_name", "source_platform", "last_telegram_bot_visit_date"
     )
     list_filter = (
         ActiveVisitFilter,
@@ -278,15 +278,15 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     visits_count.admin_order_field = 'visits_count'
     visits_count.short_description = 'Количество визитов'
 
-    def last_visit(self, obj):
-        return obj.last_visit
-    last_visit.admin_order_field = 'last_visit'
-    last_visit.short_description = 'Последний визит начало'
+    def last_visit_date(self, obj):
+        return obj.last_visit_date
+    last_visit_date.admin_order_field = 'last_visit_date'
+    last_visit_date.short_description = 'Последний визит начало'
 
     def last_end(self, obj):
         time = localtime(obj.last_end).time()
         try:
-            if (obj.last_end - obj.last_visit).seconds >= 11 * 60 * 60:
+            if (obj.last_end - obj.last_visit_date).seconds >= 11 * 60 * 60:
                 return f"{time} (до конца дня)"
         except:
             pass
