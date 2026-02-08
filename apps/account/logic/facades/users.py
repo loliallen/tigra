@@ -18,7 +18,8 @@ def make_report() -> io.BytesIO:
             "children__birth_date",
             "children__age",
             "visits_count",
-            "last_visit",
+            "last_visit_date",
+            "last_visit_store",
             "last_mobile_app_visit_date",
             "date_joined"
         )
@@ -35,8 +36,9 @@ def make_report() -> io.BytesIO:
         "Возраст ребенка",
         "Количество визитов",
         "Последний визит",
+        "Последний визит точка",
         "Последний вход в мобильное приложение",
-        "Дата регистрации",
+        "Дата регистрации"
     ]
     for column, heading in enumerate(header):
         sheet.write(0, column, heading)

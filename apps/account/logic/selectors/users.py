@@ -2,11 +2,12 @@ import typing
 
 from django.db.models import (
     QuerySet, Count, Max, ExpressionWrapper, F, Case, When,
-    Value, CharField, DurationField, DateTimeField
+    Value, CharField, DurationField, DateTimeField, Subquery, OuterRef
 )
 from django.db.models.functions import Cast, Concat
 
 from apps.account.models import User
+from apps.mobile.models import Visit
 
 
 def users_all() -> QuerySet[User]:
@@ -14,12 +15,13 @@ def users_all() -> QuerySet[User]:
 
 
 def users_with_visits(queryset: typing.Optional[QuerySet[User]] = None) -> QuerySet[User]:
+    last_visit = Visit.objects.filter(user=OuterRef('pk')).order_by('-date')
     if queryset is None:
         queryset = users_all()
     return queryset.annotate(
         visits_count=Count('visits_user'),
         # дата последнего визита
-        last_visit=Max('visits_user__date'),
+        last_visit_date=Subquery(last_visit.values_list("date")[:1]),
         # время конца последнего визита
         last_end=Max(
             ExpressionWrapper(
@@ -39,6 +41,7 @@ def users_with_visits(queryset: typing.Optional[QuerySet[User]] = None) -> Query
                 output_field=DateTimeField()
             )
         ),
+        last_visit_store=Subquery(last_visit.values_list("store__address")[:1]),
         # child_name=StringAgg(Concat('children__name', Value(' '), Cast('children__birth_date', TextField())), delimiter=';'),
     )
 
